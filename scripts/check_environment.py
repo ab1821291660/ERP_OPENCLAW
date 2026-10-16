@@ -20,6 +20,7 @@ REQUIRED_ENV = (
 
 
 
+
 SERVICES = {
     "MongoDB": os.getenv("MONGODB_URI", "mongodb://localhost:27017"),
     "Java ERP API": os.getenv("JAVA_API_BASE_URL", "http://localhost:8080/api"),
@@ -44,8 +45,6 @@ def main() -> int:
     """Print an environment report and return a shell-friendly status code."""
     failed = False
     print(f"Python: {sys.version.split()[0]}")
-
-
     for name in REQUIRED_ENV:##===================================
         configured = bool(os.getenv(name))
         print(f"[{'OK' if configured else '缺失'}] 环境变量 {name}")
