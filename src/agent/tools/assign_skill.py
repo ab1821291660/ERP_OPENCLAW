@@ -1,6 +1,6 @@
 """
 技能分配工具
-将 /skills/main/ 下已验证的技能分配给指定 Agent（主Agent 或子Agent）。
+将 /skills/main/ 下已验证的技能--分配给指定 Agent（主Agent 或子Agent）。
 支持StoreBackend 持久化 + 压缩包清理。
 """
 from datetime import timezone, datetime
@@ -72,7 +72,8 @@ def create_assign_skill_tool(sandbox_backend,
         else:
             result = sandbox_backend.execute(
                 f"mkdir -p {target_dir} && cp -r {source_dir}/* {target_dir}/"##cp复制 ##===================================##===================================##===================================##===================================
-            )#【见skill_manager】之后会清理: execute("rm -rf /skills/main/{name}")  ##===================================##===================================##===================================##===================================
+            )
+            #【见skill_manager】之后会清理: execute("rm -rf /skills/main/{name}")  ##===================================##===================================##===================================##===================================
             if result.exit_code != 0:
                 return f"错误：复制技能文件失败:\n{result.output}"
             verify = sandbox_backend.execute(f"ls {target_dir}/")
@@ -82,11 +83,13 @@ def create_assign_skill_tool(sandbox_backend,
             )
 
 
+
+
         # 4. 持久化到 StoreBackend （读取/skills/main/ 下的文件 → store.aput）
         persist_report = await  _persist_skill(sandbox_backend,##===================================
                                                store,
-                                               skills_namespace, skill_name, scope)
-        # 5. 清理压缩包（/skills/main/ 下的 *.zip、*.tar.gz、*.tar、*.tgz）
+                                               skills_namespace, skill_name, scope)##("skills",)   skill_name    scope = SCOPE_MAP[agent_name]
+        # 5. 删除 /skills/main/ 下的压缩包文件。【】====清理压缩包（/skills/main/ 下的 *.zip、*.tar.gz、*.tar、*.tgz）
         cleanup_report = _cleanup_packages(sandbox_backend)##===================================
         return (
             f"✅ 技能 '{skill_name}' 已分配给 Agent '{agent_name}'（scope: {scope}）\n"
@@ -103,14 +106,15 @@ def create_assign_skill_tool(sandbox_backend,
 async def _persist_skill(sandbox_backend,
                          store,
                          namespace, ##("skills",)
-                         skill_name: str, scope: str) -> str:
+                         skill_name: str,
+                         scope: str) -> str:##scope = SCOPE_MAP[agent_name]
     """将技能文件写入 StoreBackend 持久化。
     从沙箱 /skills/main/{skill_name}/ 读取所有文件， ##===================================##===================================
     写入store namespace下key: /{scope}/{skill_name}/... ##===================================##===================================
     Returns:
         持久化结果描述。
     """
-    source_dir = f"/skills/main/{skill_name}"##===================================##===================================
+    source_dir = f"/skills/main/{skill_name}"##目前还在main下##===================================##===================================##===================================##===================================
     now = datetime.now(timezone.utc).isoformat()
     # 列出源目录下所有文件
     ls_result = sandbox_backend.execute(f"find {source_dir} -type f")
@@ -121,7 +125,7 @@ async def _persist_skill(sandbox_backend,
         return "⚠️ 持久化跳过：源目录为空"
     persisted_count = 0
     for sandbox_path in file_paths:
-        # ## ★沙箱--子Agent名称 → 技能scope目录映射
+        # ## ★沙箱--子Agent名称 →→技能scope目录映射
         # SCOPE_MAP = {
         #     "main": "main",
         #     "procurement-analyst": "procurement",
@@ -134,9 +138,10 @@ async def _persist_skill(sandbox_backend,
         store_key = f"/{scope}/{rel}"##===================================
 
 
-        # 读取文件内容
+
+        # 下载--读取文件内容
         try:
-            dl = sandbox_backend.download_files([sandbox_path])##===================================##===================================
+            dl = sandbox_backend.download_files([sandbox_path])##===================================
             # 有错误或下载结果为空时，跳过该文件
             if not dl or dl[0].error:
                 continue
@@ -144,6 +149,7 @@ async def _persist_skill(sandbox_backend,
             content_str = content_bytes.decode("utf-8") if isinstance(content_bytes, bytes) else str(content_bytes)
         except Exception:
             continue
+
 
 
         # 写入 Store（格式与 StoreBackend 一致）
