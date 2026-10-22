@@ -201,19 +201,21 @@ async def create_main_agent(
     def backend_factory(runtime):##----------------
         ##/memories/{user_id}/preferences.md 不是 OpenSandbox 里的真实磁盘文件，而是CompositeBackend暴露出来的虚拟路径。
         return CompositeBackend(
-                                    default=sandbox_backend,#执行命令+和上传+下载文件##-------- ##===================================##===================================##===================================##===================================
+                                    default=sandbox_backend,#执行命令+和上传+下载文件+各种基础工具##-------- ##===================================##===================================##===================================##===================================
                                     routes={
                                         "/memories/": StoreBackend(##是直接从Store中取的意思##===================================##===================================
                                             runtime=runtime,
                                             # 按 user_id 命名空间隔离，无用户 ID 时使用 'anonymous' 避免数据混乱
                                             ##为namespace==#(user_id,) ##store命名空间按用户隔离
                                             ##key为= f"/{user_id}/preferences.md"
+                                            ##v的值
                                             namespace=lambda rt: (getattr(rt.runtime.context, 'user_id', 'anonymous'), )
                                         ),
                                         "/persisted-skills/": StoreBackend(##是直接从Store中取的意思##===================================##===================================
                                             runtime=runtime,
                                             ##为namespace==##SKILLS_STORE_NAMESPACE = ("skills",)
                                             ##key为=#/main或者procurement或者order/web-fetcher/SKILL.md
+                                            ##v的值
                                             namespace=lambda rt: SKILLS_STORE_NAMESPACE##SKILLS_STORE_NAMESPACE = ("skills",)
                                         )
                                     },
