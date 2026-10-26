@@ -220,7 +220,42 @@ async def create_main_agent(
                                         )
                                     },
         )
-
+    ##见：industrial_deepagents智脑工业智能体平台：：git：：https://github.com/xiaoyesoso/industrial_deepagents
+    # root = project_fs_root(agent["tenant_id"], project_id, settings)##===================================
+    # skills: None = None
+    # if agent.get("sandbox_enabled"):
+    #     backend = LocalShellBackend(
+    #         root_dir=str(root),##===================================##===================================
+    #         virtual_mode=True,
+    #         timeout=settings.sandbox_timeout,##60
+    #         max_output_bytes=settings.sandbox_max_output,##20000
+    #         env={
+    #             "PATH": os.environ.get("PATH", "/usr/bin:/bin:/usr/local/bin"),
+    #             "LANG": os.environ.get("LANG", "en_US.UTF-8"),
+    #             "HOME": str(root),
+    #         },
+    #         inherit_env=False,
+    #     )
+    #     permissions = None
+    # else:
+    #     project_backend = FilesystemBackend(root_dir=str(root))##===================================##===================================
+    #     permissions = [
+    #         FilesystemPermission(operations=["read", "write"],
+    #                              paths=_DENY_PATTERNS,
+    #                              mode="deny"),
+    #     ]
+    #     if SKILLS_DIR.is_dir():
+    #         backend = CompositeBackend(##===================================##===================================
+    #             default=project_backend,##===================================##===================================
+    #             routes={"/skills/": FilesystemBackend(root_dir=str(SKILLS_DIR))},##===================================##===================================
+    #         )
+    #         # Agents may read skill files but must not mutate the shared library.
+    #         permissions.append(FilesystemPermission(operations=["write"],
+    #                                                 paths=["/skills/**"],
+    #                                                 mode="deny"))
+    #         skills = ["/skills/"]
+    #     else:
+    #         backend = project_backend
 
 
     # ---- Phase 1.4: 上传 AGENTS.md 到沙箱 ----
