@@ -64,6 +64,10 @@ make lint
 
 
 
+
+官网：https://docs.langchain.com/oss/python/deepagents/overview
+基础：：
+沧海九粟==白鲸datawhalechina::https://github.com/datawhalechina/deepagents-in-action
 ## 参考url
 liqiangZzz：：https://github.com/liqiangZzz/ERP_OPENCLAW --
 todo

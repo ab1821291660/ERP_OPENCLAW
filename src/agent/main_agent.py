@@ -52,7 +52,7 @@ from agent.middlewares.user_skills_restore import UserSkillsRestoreMiddleware
 
 from agent.tools.assign_skill import create_assign_skill_tool##================
 from agent.tools.download_sandbox_file import create_download_tool ##================
-from agent.tools.hitl_tools import request_order_info##============
+from agent.tools.hitl_tools import request_order_info##============##============
 
 
 from agent.tools.mcp_client import load_mcp_tools ##====
@@ -196,8 +196,9 @@ async def create_main_agent(
     # ---- Phase 1: CompositeBackend factory ----
     # 每次请求重建 CompositeBackend（StoreBackend 依赖 runtime），
     # 外部sandbox_backend 是SandboxBackendProxy（热替换不丢引用）。
-    # routes 定义路径前缀到后端的映射：/memories/ → StoreBackend（用户级隔离），
-    # /persisted-skills/ → StoreBackend（按技能命名空间组织）。
+    # routes 定义路径前缀到后端的映射：/
+    #     memories/ → StoreBackend（用户级隔离），
+    #     /persisted-skills/ → StoreBackend（按技能命名空间组织）。
     def backend_factory(runtime):##----------------
         ##/memories/{user_id}/preferences.md 不是 OpenSandbox 里的真实磁盘文件，而是CompositeBackend暴露出来的虚拟路径。
         return CompositeBackend(
@@ -211,6 +212,10 @@ async def create_main_agent(
                                             ##v的值
                                             namespace=lambda rt: (getattr(rt.runtime.context, 'user_id', 'anonymous'), )
                                         ),
+
+
+                                        #"/skills/": 【本地的】FilesystemBackend(root_dir=str(SKILLS_DIR))},      virtual_mode=True},##===================================##===================================
+                                        ##或者【沙箱的】
                                         "/persisted-skills/": StoreBackend(##是直接从Store中取的意思##===================================##===================================
                                             runtime=runtime,
                                             ##为namespace==##SKILLS_STORE_NAMESPACE = ("skills",)
@@ -221,6 +226,16 @@ async def create_main_agent(
                                     },
         )
     ##见：industrial_deepagents智脑工业智能体平台：：git：：https://github.com/xiaoyesoso/industrial_deepagents
+    # from deepagents.backends import (
+    #     CompositeBackend,
+    #     FilesystemBackend,
+    #     StoreBackend,
+    # )
+    # backend = CompositeBackend(
+    #       default=StateBackend(),
+    #       routes={"/memories/": StoreBackend()},
+    # )
+    # ##
     # root = project_fs_root(agent["tenant_id"], project_id, settings)##===================================
     # skills: None = None
     # if agent.get("sandbox_enabled"):
@@ -238,7 +253,7 @@ async def create_main_agent(
     #     )
     #     permissions = None
     # else:
-    #     project_backend = FilesystemBackend(root_dir=str(root))##===================================##===================================
+    #     project_backend = FilesystemBackend(root_dir=str(root)),      virtual_mode=True##===================================##===================================
     #     permissions = [
     #         FilesystemPermission(operations=["read", "write"],
     #                              paths=_DENY_PATTERNS,
@@ -246,8 +261,10 @@ async def create_main_agent(
     #     ]
     #     if SKILLS_DIR.is_dir():
     #         backend = CompositeBackend(##===================================##===================================
-    #             default=project_backend,##===================================##===================================
-    #             routes={"/skills/": FilesystemBackend(root_dir=str(SKILLS_DIR))},##===================================##===================================
+    #               default=project_backend,##===================================##===================================
+    #               routes={
+    #                     "/skills/": FilesystemBackend(root_dir=str(SKILLS_DIR))),      virtual_mode=True},##===================================##===================================
+                          #"/memories/": StoreBackend()},  ##默认StoreBackend##===================================##===================================
     #         )
     #         # Agents may read skill files but must not mutate the shared library.
     #         permissions.append(FilesystemPermission(operations=["write"],
@@ -256,14 +273,24 @@ async def create_main_agent(
     #         skills = ["/skills/"]
     #     else:
     #         backend = project_backend
+    # - 使用内置文件系统和规划工具创建基本的DeepAgent【默认加上】
+    # - 了解后端（`StateBackend`，`FilesystemBackend`，`StoreBackend`，`CompositeBackend`）
+    # - 将工作委派给子代理以进行上下文隔离
+    # - AGENTS.md用于永久代理身份（始终加载）
+    # -- 添加自定义工具（通过Tavily进行网络搜索）
+    # - 敏感操作的人在回路批准
+    # -- 使用 / memories / * `跨线程路由的长期内存
+    # -- 通过渐进式披露实现按需功能的技能（SKILL.md）
+
+
 
 
     # ---- Phase 1.4: 上传 AGENTS.md 到沙箱 ----
     logger.info("Phase 1.4: 上传 AGENTS.md 到沙箱...")
     ag_md_content = LOCAL_AGENTS_MD.read_text(encoding="utf-8")##本地LOCAL_AGENTS_MD = EXAMPLE_DIR / "agent/memory/AGENTS.md"
-    sandbox_backend.upload_files([("/AGENTS.md", ag_md_content.encode("utf-8"))])##--------
-    ## results = sandbox_backend.download_files([sandbox_path])  ##见download_sandbox_fileBAK从沙箱中下载##===================================
-    ##dl = sandbox_backend.download_files([sandbox_path]) ##见assign_skill.py从沙箱下载 ##===================================
+    sandbox_backend.upload_files([("/AGENTS.md", ag_md_content.encode("utf-8"))])##-------- ##===================================##===================================##===================================##===================================
+    ## results = sandbox_backend.download_files([sandbox_path])  ##见download_sandbox_fileBAK从沙箱中下载##===================================##===================================##===================================##===================================
+    ##dl = sandbox_backend.download_files([sandbox_path]) ##见assign_skill.py从沙箱下载 ##===================================##===================================##===================================##===================================
 
 
     # ---- Phase 2/3/5: 使用预计算结果 ----
@@ -274,9 +301,9 @@ async def create_main_agent(
     logger.info("Phase 3.6: 创建 sandbox 依赖工具...")
     # 技能分配工具
     assign_skill = create_assign_skill_tool(##===================================
-        sandbox_backend,##--------
-        store=STORE,#STORE = InMemoryStore()为本地的store
-        skills_namespace=SKILLS_STORE_NAMESPACE,##--沙箱skill--技能StoreBackend命名空间
+                        sandbox_backend,##--------
+                        store=STORE,#STORE = InMemoryStore()为本地的store
+                        skills_namespace=SKILLS_STORE_NAMESPACE,##--沙箱skill--技能StoreBackend命名空间
     )
     # 文件下载工具
     download_sandbox_file = create_download_tool(sandbox_backend,##--------
@@ -293,11 +320,12 @@ async def create_main_agent(
 
             + [web_search]
 
-            + [request_order_info]##===================================
+            + [request_order_info]##人工接入interrupt##===================================##===================================
             + [assign_skill]##===================================
             + [download_sandbox_file]##===================================
     )
     logger.info(f"  工具池: {len(available_tools)} 个工具")
+
 
 
 
@@ -361,17 +389,25 @@ async def create_main_agent(
         model=MAIN_MODEL,
         system_prompt=system_prompt,##见memory下##===================================
         skills=["/skills/main/"],
-        memory=[AGENTS_MD_FILENAME],#主 Agent 只读指引文件（上传到沙箱 /AGENTS.md）
+
+
+        memory=[AGENTS_MD_FILENAME],#主Agent只读指引文件（上传到沙箱/AGENTS.md）？？？？这个读的是哪儿的呢【必须沙箱中的--见上面的上传】##===================================
+
+
         tools=[web_search,##===================================
                assign_skill, ##===================================
                download_sandbox_file],##===================================
-        subagents=subagents,##会调用task工具吗##===================================##===================================##===================================##===================================
         ##
         ##
+        subagents=subagents,##会调用task工具----subagent inherit the parent's tools — pass tools=[...] in the subagent     spec only to override.##===================================##===================================##===================================##===================================
         middleware=main_middleware,
         backend=backend_factory,##---------------- 内置沙箱：default=sandbox_backend,#执行命令+和上传+下载文件 ##===================================##===================================##===================================##===================================
-        store=STORE,
+        ##
+        ##
+        store=STORE,## InMemoryStore()
         checkpointer=CHECKPOINTER,
+        ##
+        ##
         context_schema=ProcurementContext,##from agent.scheam import ProcurementContext
         #class ProcurementContext:
         # """
@@ -383,4 +419,8 @@ async def create_main_agent(
     )
     logger.info(f"=== 用户 {user_id} Agent Graph 创建完成 ===")
     return agent_graph
+
+
+
+
 
