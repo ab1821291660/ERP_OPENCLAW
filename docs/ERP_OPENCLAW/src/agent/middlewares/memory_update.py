@@ -326,10 +326,11 @@ class MemoryUpdateMiddleware(AgentMiddleware):
 
             # 合并新旧偏好数据
             updated_content = _merge_preferences(current_lines, suppliers, query)
-
             # ── 步骤 8：写回 StoreBackend ──
             file_value = _create_file_value(updated_content)
-            await store.aput(namespace, key, file_value)
+            await store.aput(namespace,
+                             key,
+                             file_value)
 
             logger.info(
                 f"MemoryUpdateMiddleware: 已更新 {user_id} 的记忆 "

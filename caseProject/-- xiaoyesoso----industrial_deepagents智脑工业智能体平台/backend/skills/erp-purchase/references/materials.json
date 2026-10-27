@@ -1,0 +1,15 @@
+{
+  "_comment": "演示物料主数据（未对接客户 ERP，仅技能演示用）。价格单位：元，交期单位：天，库存单位：台/套。",
+  "materials": [
+    {"code": "M-ESW-TR-450", "name": "永磁同步曳引机 450kg", "spec": "ESW 系列，额定载重450kg，1.5m/s", "unit_price": 18500, "lead_time_days": 30, "stock": 6, "uom": "台"},
+    {"code": "M-ESW03-TR-400", "name": "永磁同步曳引机 400kg", "spec": "ESW03 系列，额定载重400kg，1.0m/s", "unit_price": 16200, "lead_time_days": 28, "stock": 4, "uom": "台"},
+    {"code": "M-GEN-CTRL-A2", "name": "一体化控制柜", "spec": "含门机控制器与通讯板，适配 ESW/ESW03", "unit_price": 9800, "lead_time_days": 21, "stock": 10, "uom": "套"},
+    {"code": "M-DOOR-MID-1100", "name": "中分门门机系统", "spec": "开门宽度1100mm，含门机、滑轨、重锤", "unit_price": 7600, "lead_time_days": 25, "stock": 8, "uom": "套"},
+    {"code": "M-DOOR-SIDE-1000", "name": "旁开门门机系统", "spec": "开门宽度1000mm，旁开门型式", "unit_price": 6900, "lead_time_days": 25, "stock": 5, "uom": "套"},
+    {"code": "M-CAB-1200", "name": "轿厢总成 1200×1200", "spec": "ESW 客梯轿厢，净尺寸1200×1200mm", "unit_price": 23400, "lead_time_days": 45, "stock": 2, "uom": "套"},
+    {"code": "M-CAB-1000", "name": "轿厢总成 1000×1000", "spec": "ESW03 客梯轿厢，净尺寸1000×1000mm", "unit_price": 19800, "lead_time_days": 40, "stock": 3, "uom": "套"},
+    {"code": "M-Rail-T90", "name": "T90 导轨（含支架）", "spec": "每台电梯配套导轨与支架组件", "unit_price": 4300, "lead_time_days": 18, "stock": 15, "uom": "套"},
+    {"code": "M-CW-SET", "name": "对重装置成套", "spec": "含对重架、对重块、导靴（按载重配重）", "unit_price": 5100, "lead_time_days": 20, "stock": 9, "uom": "套"},
+    {"code": "M-ROP-8X19", "name": "钢丝绳组件 8×19", "spec": "曳引钢丝绳及绳头组合，按层站配置", "unit_price": 1800, "lead_time_days": 14, "stock": 20, "uom": "套"}
+  ]
+}

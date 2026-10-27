@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "stage_04_subagent": "./stages/stage_04_subagent.py:agent"
+  },
+  "env": ".env"
+}

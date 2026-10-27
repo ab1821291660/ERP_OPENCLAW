@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>智脑工业智能体平台</title>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<script src="https://unpkg.com/marked@12.0.2/marked.min.js"></script>
+<script src="https://unpkg.com/dompurify@3.1.6/dist/purify.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1f2329;
+    --ink-2: #5c6470;
+    --ink-3: #8a909a;
+    --line: #e7e9ee;
+    --brand: #2f6bff;
+    --brand-weak: #eef3ff;
+    --brand-ink: #1d4fd7;
+    --green: #1fa463;
+    --red: #e5484d;
+    --amber: #d9820b;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(31,35,41,.06), 0 4px 16px rgba(31,35,41,.05);
+    --sidebar: 240px;
+  }
+  * { box-sizing: border-box; }
+  html, body, #root { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.6;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; font-size: 14px; }
+  a { color: var(--brand-ink); text-decoration: none; }
+
+  /* ---------- auth ---------- */
+  .auth-wrap { min-height:100%; display:flex; align-items:center; justify-content:center; padding:24px;
+    background: radial-gradient(1200px 500px at 50% -10%, #e3ecff 0%, var(--bg) 60%); }
+  .auth-card { width:380px; background:var(--card); border-radius:18px; box-shadow:var(--shadow); padding:32px; }
+  .auth-logo { font-size:20px; font-weight:700; display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .auth-logo .dot { width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#4d84ff,#2f6bff); }
+  .auth-sub { color:var(--ink-3); margin-bottom:24px; font-size:13px; }
+  .auth-tabs { display:flex; gap:4px; background:var(--bg); border-radius:10px; padding:4px; margin-bottom:20px; }
+  .auth-tabs button { flex:1; border:0; background:transparent; padding:8px; border-radius:8px; color:var(--ink-2); font-weight:500; }
+  .auth-tabs button.active { background:var(--card); color:var(--ink); box-shadow:var(--shadow); }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12.5px; color:var(--ink-2); margin-bottom:6px; font-weight:500; }
+  .field input, .field textarea, .field select {
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; outline:none; background:#fff; color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(47,107,255,.12); }
+  .btn { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:9px 16px; font-weight:500; transition:.15s; }
+  .btn:hover { border-color:#cfd5de; background:#fafbfc; }
+  .btn-primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn-primary:hover { background:var(--brand-ink); border-color:var(--brand-ink); }
+  .btn-danger { color:var(--red); background:#fff; border-color:#f3c3c5; }
+  .btn-danger:hover { background:#fef2f2; }
+  .btn-block { width:100%; padding:11px; margin-top:6px; }
+  .btn-sm { padding:5px 10px; font-size:12.5px; border-radius:8px; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .hint { font-size:12px; color:var(--ink-3); margin-top:14px; text-align:center; }
+  .form-error { background:#fef2f2; color:var(--red); border-radius:9px; padding:8px 12px; font-size:12.5px; margin-bottom:14px; }
+
+  /* ---------- shell ---------- */
+  .shell { display:flex; height:100%; }
+  .sidebar { width:var(--sidebar); flex-shrink:0; background:#fbfbfc; border-right:1px solid var(--line);
+    display:flex; flex-direction:column; padding:16px 12px; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; padding:4px 8px 16px; }
+  .brand .dot { width:24px; height:24px; border-radius:7px; background:linear-gradient(135deg,#4d84ff,#2f6bff); }
+  .new-task { width:100%; background:var(--brand); color:#fff; border:0; border-radius:11px; padding:10px; font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; }
+  .new-task:hover { background:var(--brand-ink); }
+  .nav { display:flex; flex-direction:column; gap:2px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:9px; color:var(--ink-2);
+    border:0; background:transparent; width:100%; text-align:left; font-size:13.5px; }
+  .nav-item:hover { background:#eef0f4; color:var(--ink); }
+  .nav-item.active { background:var(--brand-weak); color:var(--brand-ink); font-weight:600; }
+  .nav-ico { width:18px; text-align:center; }
+  .nav-sec { font-size:11px; color:var(--ink-3); padding:14px 10px 6px; letter-spacing:.5px; }
+  .recent { flex:1; overflow-y:auto; margin:0 -4px; padding:0 4px; }
+  .recent-item { padding:7px 10px; border-radius:8px; cursor:pointer; font-size:12.5px; color:var(--ink-2);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .recent-item:hover { background:#eef0f4; }
+  .recent-item.active { background:var(--brand-weak); color:var(--brand-ink); }
+  .recent-sub { font-size:11px; color:var(--ink-3); overflow:hidden; text-overflow:ellipsis; }
+  .usercard { border-top:1px solid var(--line); padding-top:10px; margin-top:8px; }
+  .usercard .who { display:flex; align-items:center; gap:9px; padding:6px; border-radius:9px; cursor:pointer; }
+  .usercard .who:hover { background:#eef0f4; }
+  .avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#7aa2ff,#2f6bff); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0; }
+  .user-meta { min-width:0; }
+  .user-meta .n { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-meta .t { font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .main { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar { height:56px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.85); backdrop-filter:blur(8px);
+    display:flex; align-items:center; padding:0 24px; gap:12px; }
+  .topbar h2 { font-size:15.5px; margin:0; font-weight:650; }
+  .topbar .spacer { flex:1; }
+  .content { flex:1; overflow-y:auto; }
+
+  /* ---------- home ---------- */
+  .home { max-width:860px; margin:0 auto; padding:48px 24px 40px; }
+  .greet { font-size:26px; font-weight:700; margin-bottom:4px; }
+  .greet-sub { color:var(--ink-3); margin-bottom:26px; }
+  .tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .tab { padding:6px 14px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--ink-2); font-size:13px; }
+  .tab.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:26px; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 13px; font-size:12.5px; color:var(--ink-2); }
+  .chip:hover { border-color:var(--brand); color:var(--brand-ink); background:var(--brand-weak); }
+  .composer { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:14px; }
+  .composer textarea { width:100%; border:0; outline:none; resize:none; min-height:64px; font-size:15px; background:transparent; color:var(--ink); }
+  .composer-bar { display:flex; align-items:center; gap:10px; margin-top:8px; }
+  .composer-bar select { border:1px solid var(--line); border-radius:9px; padding:6px 10px; background:#fff; color:var(--ink-2); font-size:12.5px; }
+  .composer-bar .spacer { flex:1; }
+  .send-btn { background:var(--brand); color:#fff; border:0; border-radius:10px; padding:8px 20px; font-weight:600; font-size:13.5px; }
+  .send-btn:hover { background:var(--brand-ink); }
+  .practice { margin-top:30px; }
+  .practice-h { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .practice-h h3 { margin:0; font-size:14.5px; }
+  .link-btn { border:0; background:transparent; color:var(--brand-ink); font-size:12.5px; padding:4px; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .pcard { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px; cursor:pointer; transition:.15s; }
+  .pcard:hover { border-color:#cfd5de; box-shadow:var(--shadow); transform:translateY(-1px); }
+  .pcard .ico { font-size:18px; margin-bottom:8px; }
+  .pcard .ttl { font-weight:600; font-size:13px; margin-bottom:4px; }
+  .pcard .desc { font-size:12px; color:var(--ink-3); line-height:1.5; }
+
+  /* ---------- chat ---------- */
+  .chat-wrap { display:flex; flex-direction:column; height:100%; }
+  .messages { flex:1; overflow-y:auto; padding:24px 0; }
+  .msg-row { max-width:820px; margin:0 auto 20px; padding:0 24px; display:flex; gap:12px; }
+  .msg-row.user { flex-direction:row-reverse; }
+  .bubble { max-width:78%; padding:11px 15px; border-radius:14px; font-size:14px; white-space:pre-wrap; word-break:break-word; }
+  .msg-row.user .bubble { background:var(--brand); color:#fff; border-bottom-right-radius:4px; }
+  .msg-row.assistant .bubble { background:#fff; border:1px solid var(--line); border-bottom-left-radius:4px; box-shadow:var(--shadow); }
+  .msg-avatar { width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:600; color:#fff; }
+  .msg-row.assistant .msg-avatar { background:linear-gradient(135deg,#46b382,#1fa463); }
+  .msg-row.user .msg-avatar { background:linear-gradient(135deg,#7aa2ff,#2f6bff); }
+  .tool-chips { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  .think-box { margin:2px 0 8px; }
+  .think-head { font-size:13px; color:var(--ink-3); user-select:none; display:inline-flex; align-items:center; gap:5px; }
+  .think-head:not(.noclick) { cursor:pointer; }
+  .think-head:not(.noclick):hover { color:var(--ink-2); }
+  .think-chev { display:inline-block; font-size:11px; transition:transform .18s ease; transform:rotate(-90deg); }
+  .think-chev.open { transform:rotate(0deg); }
+  .think-body { margin-top:7px; padding:2px 0 2px 12px; border-left:2px solid var(--line);
+    font-size:13px; line-height:1.75; color:var(--ink-3);
+    white-space:pre-wrap; word-break:break-word; max-height:240px; overflow-y:auto; }
+  .tool-chip { display:inline-flex; align-items:center; gap:7px; font-size:12px; background:var(--bg);
+     border:1px solid var(--line); border-radius:9px; padding:5px 10px; color:var(--ink-2); align-self:flex-start; }
+  .tool-chip .state { font-size:11px; padding:1px 7px; border-radius:99px; }
+  .tool-chip .state.run { background:#fff4e0; color:var(--amber); }
+  .tool-chip .state.ok { background:#e6f7ef; color:var(--green); }
+  .tool-chip .state.err { background:#fdebec; color:var(--red); }
+  .tool-chip pre { margin:6px 0 0; font-size:11.5px; color:var(--ink-3); white-space:pre-wrap; max-width:520px; }
+  .cursor { display:inline-block; width:7px; height:14px; background:var(--brand); vertical-align:-2px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .chat-composer { border-top:1px solid var(--line); background:#fff; padding:14px 24px; }
+  .chat-composer .inner { max-width:820px; margin:0 auto; }
+  .chat-composer textarea { width:100%; border:1px solid var(--line); border-radius:13px; padding:12px 14px; resize:none; min-height:52px; outline:none; }
+  .chat-composer textarea:focus { border-color:var(--brand); }
+  .chat-bar { display:flex; align-items:center; margin-top:8px; gap:10px; }
+  .chat-bar .spacer { flex:1; }
+  .msg-err { font-size:12px; color:var(--red); background:#fef2f2; border-radius:8px; padding:6px 10px; margin-top:6px; }
+  .empty-chat { height:100%; display:flex; align-items:center; justify-content:center; color:var(--ink-3); }
+
+  /* ---------- project view ---------- */
+  .proj-layout { display:flex; height:100%; min-height:0; }
+  .proj-content { flex:1; min-width:0; display:flex; flex-direction:column; min-height:0; }
+  .conv-col { width:240px; flex-shrink:0; border-right:1px solid var(--line); background:#fbfbfc;
+    display:flex; flex-direction:column; min-height:0; }
+  .conv-head { padding:16px 14px 6px; }
+  .conv-head .name { font-size:14.5px; font-weight:650; display:flex; align-items:center; gap:8px; }
+  .conv-head .name .pico { width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,#7aa2ff,#2f6bff);
+    color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+  .conv-sub { font-size:11px; color:var(--ink-3); margin-top:2px; padding-left:34px; }
+  .conv-new { margin:10px 12px 8px; background:#fff; border:1px dashed #c9d4ee; color:var(--brand-ink);
+    border-radius:10px; padding:8px; font-size:12.5px; font-weight:500; }
+  .conv-new:hover { background:var(--brand-weak); border-color:var(--brand); }
+  .conv-list { flex:1; overflow-y:auto; padding:0 8px 10px; }
+  .conv-item { padding:8px 10px; border-radius:9px; cursor:pointer; }
+  .conv-item:hover { background:#eef0f4; }
+  .conv-item.active { background:var(--brand-weak); }
+  .conv-item .t { font-size:12.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .conv-item.active .t { color:var(--brand-ink); font-weight:600; }
+  .conv-item .s { font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .proj-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--ink-3); }
+  .proj-empty .ico { font-size:38px; }
+  .proj-empty .t { font-size:15px; font-weight:600; color:var(--ink-2); }
+  .proj-empty .s { font-size:12.5px; margin-bottom:8px; }
+  .nav-sec-row { display:flex; align-items:center; justify-content:space-between; padding:14px 10px 6px; }
+  .nav-sec-row .label { font-size:11px; color:var(--ink-3); letter-spacing:.5px; }
+  .sec-add { border:0; background:transparent; color:var(--ink-3); font-size:14px; padding:0 5px; border-radius:6px; line-height:1.2; }
+  .sec-add:hover { color:var(--brand-ink); background:#eef0f4; }
+  .proj-item { display:flex; align-items:center; gap:8px; min-width:0; }
+  .proj-item .pico { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#7aa2ff,#2f6bff);
+    color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+  .modal .hint-line { font-size:12px; color:var(--ink-3); background:var(--bg); border-radius:9px; padding:8px 12px; margin-top:10px; }
+
+  /* ---------- generic panels ---------- */
+  .page { max-width:1080px; margin:0 auto; padding:24px; }
+  .page-head { display:flex; align-items:center; margin-bottom:18px; gap:12px; }
+  .page-head h2 { margin:0; font-size:18px; }
+  .page-head .spacer { flex:1; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px; }
+  .stat .k { font-size:12px; color:var(--ink-3); margin-bottom:6px; }
+  .stat .v { font-size:22px; font-weight:700; }
+  table.tbl { width:100%; border-collapse:collapse; }
+  table.tbl th, table.tbl td { text-align:left; padding:10px 14px; font-size:13px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.tbl th { color:var(--ink-3); font-weight:500; font-size:12px; background:#fafbfc; position:sticky; top:0; }
+  table.tbl tr:last-child td { border-bottom:0; }
+  tr.clickable { cursor:pointer; }
+  tr.clickable:hover td { background:#f8faff; }
+  .badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:99px; font-weight:500; }
+  .badge.ok { background:#e6f7ef; color:var(--green); }
+  .badge.run { background:#fff4e0; color:var(--amber); }
+  .badge.fail { background:#fdebec; color:var(--red); }
+  .badge.wait { background:#eef0f4; color:var(--ink-2); }
+  .badge.role-owner { background:#f3ecff; color:#7a4dff; }
+  .badge.role-admin { background:var(--brand-weak); color:var(--brand-ink); }
+  .badge.role-member { background:#e6f7ef; color:var(--green); }
+  .badge.role-viewer { background:#eef0f4; color:var(--ink-2); }
+
+  .filters { display:flex; gap:8px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+  .filters select, .filters input { border:1px solid var(--line); border-radius:9px; padding:7px 10px; background:#fff; }
+
+  /* modal */
+  .modal-mask { position:fixed; inset:0; background:rgba(31,35,41,.4); display:flex; align-items:center; justify-content:center; z-index:50; }
+  .modal { background:#fff; border-radius:16px; width:560px; max-width:94vw; max-height:88vh; overflow-y:auto; padding:22px 24px; }
+  .modal h3 { margin:0 0 16px; font-size:16.5px; }
+  .modal-foot { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .switch-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--line);
+    border-radius:11px; margin-bottom:10px; }
+  .switch-row .meta { font-size:11.5px; color:var(--ink-3); max-width:380px; }
+  .switch-row.risk { border-color:#f3d2a8; background:#fffaf3; }
+  .switch { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch .track { position:absolute; inset:0; background:#d3d7de; border-radius:99px; transition:.15s; }
+  .switch .track::before { content:""; position:absolute; width:18px; height:18px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; }
+  .switch input:checked + .track { background:var(--brand); }
+  .switch input:checked + .track::before { transform:translateX(18px); }
+  .tool-pick { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .tool-pick label { display:flex; gap:8px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:9px 11px; cursor:pointer; font-size:12.5px; }
+  .tool-pick label.on { border-color:var(--brand); background:var(--brand-weak); }
+  .tool-pick .d { color:var(--ink-3); font-size:11px; }
+
+  /* eval layout */
+  .eval-layout { display:grid; grid-template-columns:260px 1fr; gap:16px; align-items:start; }
+  .ds-list { padding:8px; }
+  .ds-item { padding:9px 11px; border-radius:9px; cursor:pointer; margin-bottom:2px; }
+  .ds-item:hover { background:var(--bg); }
+  .ds-item.active { background:var(--brand-weak); color:var(--brand-ink); font-weight:600; }
+  .ds-item .n { font-size:12px; color:var(--ink-3); font-weight:400; }
+  .case-output { max-width:340px; font-size:12px; color:var(--ink-2); white-space:pre-wrap; max-height:70px; overflow:hidden; }
+  .score-cell { font-weight:700; }
+  .score-pass { color:var(--green); }
+  .score-fail { color:var(--red); }
+
+  /* drawer */
+  .drawer-mask { position:fixed; inset:0; background:rgba(31,35,41,.35); z-index:40; }
+  .drawer { position:fixed; top:0; right:0; bottom:0; width:520px; max-width:96vw; background:#fff; z-index:41;
+    box-shadow:-8px 0 30px rgba(31,35,41,.12); display:flex; flex-direction:column; }
+  .drawer-head { padding:18px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; }
+  .drawer-body { flex:1; overflow-y:auto; padding:18px 22px; }
+  .kv { display:grid; grid-template-columns:88px 1fr; gap:6px 12px; font-size:12.5px; margin-bottom:16px; }
+  .kv .k { color:var(--ink-3); }
+  .timeline { border-left:2px solid var(--line); margin-left:8px; padding-left:18px; display:flex; flex-direction:column; gap:14px; }
+  .tl-item { position:relative; }
+  .tl-item::before { content:""; position:absolute; left:-25px; top:5px; width:9px; height:9px; border-radius:50%; background:var(--brand); border:2px solid #fff; box-shadow:0 0 0 1px var(--brand); }
+  .tl-item.tool::before { background:var(--amber); box-shadow:0 0 0 1px var(--amber); }
+  .tl-name { font-weight:600; font-size:13px; }
+  .tl-time { font-size:11px; color:var(--ink-3); }
+  .tl-data { background:var(--bg); border-radius:9px; padding:8px 10px; margin-top:5px; font-size:12px;
+    white-space:pre-wrap; word-break:break-word; color:var(--ink-2); max-height:220px; overflow:auto; }
+
+  /* toast & misc */
+  .toast-wrap { position:fixed; top:18px; left:50%; transform:translateX(-50%); z-index:100; display:flex; flex-direction:column; gap:8px; }
+  .toast { background:var(--ink); color:#fff; padding:10px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow); }
+  .toast.err { background:var(--red); }
+  .toast.ok { background:var(--green); }
+  .empty { text-align:center; color:var(--ink-3); padding:40px 20px; font-size:13px; }
+  .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .key-box { background:#0f172a; color:#b8f0d0; border-radius:10px; padding:12px 14px; font-size:12.5px;
+    word-break:break-all; display:flex; gap:10px; align-items:flex-start; }
+  .section-title { font-size:13.5px; font-weight:650; margin:22px 0 10px; }
+  .role-select { padding:3px 6px; font-size:12px; border-radius:7px; }
+  .spin { display:inline-block; width:13px; height:13px; border:2px solid currentColor; border-top-color:transparent;
+    border-radius:50%; animation:rot .7s linear infinite; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+  .lf-tag { font-size:11px; color:var(--ink-3); background:var(--bg); border-radius:6px; padding:2px 8px; }
+  .truncate { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ============================ portal ============================ */
+  body.portal { --brand:#ffc400; --brand-weak:#fff6d5; --brand-ink:#8a6500; }
+  body.portal .auth-wrap { background: radial-gradient(1200px 500px at 50% -10%, #fff3c4 0%, var(--bg) 60%); }
+  body.portal .auth-logo .dot { background:linear-gradient(135deg,#ffd95c,#ffc400); }
+  body.portal .field input:focus, body.portal .field textarea:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(255,196,0,.18); }
+  body.portal .btn-primary { color:#3c3200; }
+  body.portal .btn-primary:hover { background:#e6b100; border-color:#e6b100; color:#3c3200; }
+
+  .p-topbar { height:52px; background:#3c4043; color:#fff; display:flex; align-items:center;
+    padding:0 18px; gap:14px; flex-shrink:0; }
+  .p-topbar .p-name { font-size:15px; font-weight:700; letter-spacing:.5px; display:flex; align-items:center; gap:9px; }
+  .p-topbar .p-name .p-logo { width:24px; height:24px; border-radius:7px; background:#ffc400; color:#3c3200;
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; }
+  .p-topbar .spacer { flex:1; }
+  .p-admin-btn { background:#fff; color:#3c4043; border:0; border-radius:7px; padding:6px 14px; font-size:12.5px; font-weight:600; }
+  .p-admin-btn:hover { background:#f1f2f4; }
+  .p-user { position:relative; display:flex; align-items:center; gap:8px; cursor:pointer; padding:4px 6px; border-radius:8px; }
+  .p-user:hover { background:rgba(255,255,255,.08); }
+  .p-user .p-name2 { font-size:12.5px; color:#e8eaed; }
+  .p-avatar { width:30px; height:30px; border-radius:50%; background:#ffc400; color:#3c3200; font-weight:700; font-size:12.5px;
+    display:flex; align-items:center; justify-content:center; }
+  .p-menu { position:absolute; top:42px; right:0; background:#fff; color:var(--ink); border-radius:10px;
+    box-shadow:0 6px 24px rgba(0,0,0,.16); min-width:150px; padding:6px; z-index:60; }
+  .p-menu button { display:block; width:100%; text-align:left; border:0; background:transparent; padding:8px 10px;
+    border-radius:7px; font-size:13px; color:var(--ink); }
+  .p-menu button:hover { background:#f4f5f7; }
+
+  .p-body { flex:1; display:flex; min-height:0; background:#fff; }
+  .p-rail { width:56px; flex-shrink:0; background:#f7f8fa; border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:6px; }
+  .p-rail button { width:40px; height:40px; border:0; background:transparent; border-radius:10px; font-size:18px;
+    color:#5c6470; display:flex; align-items:center; justify-content:center; }
+  .p-rail button:hover { background:#eef0f4; }
+  .p-rail button.active { background:#ffc400; color:#3c3200; }
+
+  .p-history { width:292px; flex-shrink:0; border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .p-hist-head { display:flex; align-items:center; padding:16px 16px 10px; gap:8px; }
+  .p-hist-head .t { flex:1; font-size:15px; font-weight:700; }
+  .p-hist-head button { border:0; background:transparent; font-size:14px; color:var(--ink-3); padding:4px; border-radius:6px; }
+  .p-hist-head button:hover { background:#eef0f4; color:var(--ink-2); }
+  .p-new { margin:0 16px 10px; background:#ffc400; color:#3c3200; border:0; border-radius:8px; height:40px;
+    font-size:13.5px; font-weight:700; }
+  .p-new:hover { background:#e6b100; }
+  .p-filter { margin:0 16px 8px; }
+  .p-filter input { width:100%; border:1px solid var(--line); border-radius:8px; padding:7px 10px; outline:none; font-size:12.5px; }
+  .p-filter input:focus { border-color:var(--brand); }
+  .p-hist-list { flex:1; overflow-y:auto; padding:0 8px 10px; }
+  .p-month { font-size:11px; color:var(--ink-3); padding:10px 10px 4px; font-weight:600; }
+  .p-hist-item { position:relative; padding:8px 30px 8px 10px; border-radius:8px; cursor:pointer; margin-bottom:1px; }
+  .p-hist-item:hover { background:#f4f5f7; }
+  .p-hist-item.active { background:#fff6d5; }
+  .p-hist-item .t { font-size:13px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .p-hist-item.active .t { color:var(--brand-ink); font-weight:600; }
+  .p-hist-item .more { position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    border:0; background:transparent; color:var(--ink-3); font-size:14px; padding:2px 5px; border-radius:5px;
+    visibility:hidden; }
+  .p-hist-item:hover .more { visibility:visible; }
+  .p-hist-item .more:hover { background:#e3e6eb; }
+
+  .p-chat { flex:1; min-width:0; display:flex; flex-direction:column; height:100%; position:relative; background:#fff; }
+  .p-msgs { flex:1; overflow-y:auto; padding:22px 0 0; }
+  .p-row { max-width:860px; margin:0 auto 18px; padding:0 28px; display:flex; flex-direction:column; }
+  .p-row.user { align-items:flex-end; }
+  .p-bubble-u { max-width:80%; background:#f1f2f4; color:var(--ink); border-radius:14px; border-bottom-right-radius:5px;
+    padding:11px 15px; font-size:14px; white-space:pre-wrap; word-break:break-word; }
+  .p-ai { max-width:860px; width:100%; font-size:14px; line-height:1.75; }
+  /* markdown body (assistant messages rendered via marked + DOMPurify) */
+  .md-body { white-space:normal; word-break:break-word; }
+  .md-body > *:first-child { margin-top:0; }
+  .md-body > *:last-child { margin-bottom:0; }
+  .md-body h1, .md-body h2, .md-body h3, .md-body h4 { font-size:15.5px; margin:14px 0 6px; line-height:1.5; }
+  .md-body h1 { font-size:17px; }
+  .md-body p { margin:6px 0; }
+  .md-body ul, .md-body ol { margin:6px 0; padding-left:20px; }
+  .md-body li { margin:3px 0; }
+  .md-body li > p { margin:2px 0; }
+  .md-body code { background:#f4f5f7; border-radius:4px; padding:1px 5px; font-size:12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .md-body pre { background:#1e2430; color:#e6e9ef; border-radius:10px; padding:12px 14px; overflow-x:auto; margin:8px 0; }
+  .md-body pre code { background:transparent; color:inherit; padding:0; font-size:12.5px; }
+  .md-body table { border-collapse:collapse; margin:8px 0; font-size:13px; display:block; overflow-x:auto; max-width:100%; }
+  .md-body th, .md-body td { border:1px solid var(--line); padding:6px 12px; text-align:left; }
+  .md-body th { background:#fafbfc; font-weight:600; }
+  .md-body tr:nth-child(2n) td { background:#fcfcfd; }
+  .md-body blockquote { margin:8px 0; padding:2px 12px; border-left:3px solid var(--line); color:var(--ink-2); background:#fafbfc; border-radius:0 8px 8px 0; }
+  .md-body blockquote p { margin:4px 0; }
+  .md-body a { text-decoration:underline; text-underline-offset:2px; }
+  .md-body hr { border:0; border-top:1px solid var(--line); margin:12px 0; }
+  .md-body img { max-width:100%; border-radius:8px; }
+  .md-body input[type="checkbox"] { margin-right:5px; }
+  .p-status { font-size:12.5px; color:var(--ink-3); margin:2px 0 6px; user-select:none; cursor:pointer; display:inline-flex; gap:5px; align-items:center; }
+  .p-status.err { color:var(--red); }
+  .p-status-detail { font-size:11.5px; color:var(--ink-3); margin:0 0 6px; }
+  .p-tools { display:flex; flex-direction:column; gap:6px; margin:4px 0 8px; align-items:flex-start; }
+  .p-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 28px;
+    color:var(--ink-3); }
+  .p-empty .big { font-size:30px; margin-bottom:14px; }
+  .p-empty .ttl { font-size:18px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .p-empty .sub { font-size:13px; margin-bottom:26px; }
+  .p-examples { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-width:680px; width:100%; }
+  .p-example { text-align:left; border:1px solid var(--line); background:#fff; border-radius:12px; padding:12px 14px;
+    font-size:12.5px; color:var(--ink-2); transition:.15s; }
+  .p-example:hover { border-color:var(--brand); background:#fffdf4; color:var(--ink); }
+  .p-example b { display:block; color:var(--ink); font-size:13px; margin-bottom:3px; }
+
+  .p-composer-wrap { padding:10px 28px 8px; background:linear-gradient(to top,#fff 70%, rgba(255,255,255,0)); }
+  .p-composer { max-width:860px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:18px;
+    box-shadow:0 2px 14px rgba(31,35,41,.08); padding:10px 14px 8px; position:relative; }
+  .p-composer textarea { width:100%; border:0; outline:none; resize:none; min-height:30px; max-height:180px;
+    font-size:14px; line-height:1.6; background:transparent; color:var(--ink); }
+  .p-composer-bar { display:flex; align-items:center; gap:6px; margin-top:6px; }
+  .p-icon-btn { border:0; background:transparent; font-size:15px; color:#5c6470; padding:5px 8px; border-radius:8px;
+    display:inline-flex; align-items:center; gap:5px; font-size:12.5px; }
+  .p-icon-btn:hover { background:#f4f5f7; }
+  .p-icon-btn.on { background:#fff6d5; color:var(--brand-ink); }
+  .p-send { margin-left:auto; width:34px; height:34px; border-radius:50%; border:0; background:#ffc400; color:#3c3200;
+    font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .p-send:hover { background:#e6b100; }
+  .p-send:disabled { background:#e3e6eb; color:#a8aeb8; cursor:not-allowed; }
+  .p-disclaimer { text-align:center; font-size:11px; color:var(--ink-3); padding-bottom:10px; }
+  .p-skill-pop { position:absolute; bottom:52px; left:10px; width:330px; max-height:340px; overflow-y:auto;
+    background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 30px rgba(31,35,41,.14);
+    padding:6px; z-index:30; }
+  .p-skill-item { display:flex; align-items:center; gap:9px; width:100%; border:0; background:transparent;
+    padding:8px 9px; border-radius:8px; text-align:left; font-size:12.5px; color:var(--ink); }
+  .p-skill-item:hover { background:#f7f8fa; }
+  .p-skill-item.off { color:var(--ink-3); cursor:default; }
+  .p-skill-item .ico { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+  .p-skill-item .meta { min-width:0; flex:1; }
+  .p-skill-item .meta .lab { display:flex; align-items:center; gap:6px; font-weight:600; font-size:12.5px; }
+  .p-skill-item .meta .desc { font-size:11px; color:var(--ink-3); white-space:normal; line-height:1.4; }
+  .p-skill-item .tag { font-size:10px; padding:1px 7px; border-radius:99px; background:#eef0f4; color:var(--ink-3); flex-shrink:0; }
+  .p-skill-item .tag.on { background:#e6f7ef; color:var(--green); }
+  .p-skill-item .lab i.demo { font-style:normal; font-size:10px; padding:0 5px; border-radius:99px;
+    background:#fff7e0; color:#b98300; border:1px solid #f5e3ae; font-weight:500; }
+  .p-chips { display:flex; flex-wrap:wrap; gap:5px; padding:2px 0 6px; }
+  .p-chip { font-size:11px; border:1px solid #f0d272; background:#fffaf0; color:var(--brand-ink);
+    border-radius:99px; padding:2px 8px; display:inline-flex; align-items:center; gap:5px; }
+  .p-chip button { border:0; background:transparent; padding:0; color:var(--brand-ink); font-size:12px; line-height:1; }
+  .p-files { display:flex; flex-direction:column; gap:6px; padding:2px 0 8px; }
+  .p-file { display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:#fafbfc;
+    border-radius:10px; padding:7px 9px; font-size:12px; color:var(--ink-2); }
+  .p-file .name { font-weight:600; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .p-file .meta { color:var(--ink-3); font-size:11px; flex-shrink:0; }
+  .p-file .state { font-size:10px; border-radius:99px; padding:1px 7px; background:#fff4e0; color:var(--amber); flex-shrink:0; }
+  .p-file .state.uploaded { background:#eef0f4; color:var(--ink-2); }
+  .p-file button { margin-left:auto; border:0; background:transparent; color:var(--ink-3); font-size:13px; }
+  .p-scroll-btn { position:absolute; right:26px; bottom:118px; width:36px; height:36px; border-radius:50%;
+    border:1px solid var(--line); background:#fff; box-shadow:var(--shadow); font-size:15px; color:var(--ink-2);
+    display:flex; align-items:center; justify-content:center; z-index:20; }
+  .p-scroll-btn:hover { background:#f7f8fa; }
+  .p-loading { flex:1; display:flex; align-items:center; justify-content:center; color:var(--ink-3); gap:8px; }
+
+  .p-modal-card { background:#fff; border-radius:16px; width:520px; max-width:92vw; max-height:82vh; overflow:auto; padding:20px 22px; }
+  .p-know-item { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .p-know-item .meta { font-size:11px; color:var(--ink-3); margin-bottom:4px; display:flex; gap:8px; }
+  .p-know-item .ttl { font-weight:600; font-size:13px; margin-bottom:4px; }
+  .p-know-item .body { font-size:12.5px; color:var(--ink-2); white-space:pre-wrap; line-height:1.6; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+const API = "/api";
+document.body.classList.toggle("portal", localStorage.getItem("dap:mode") !== "admin");
+
+/* ============================== utilities ============================== */
+
+const LS_KEY = "dap_session";
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || null; } catch { return null; }
+}
+function saveSession(s) {
+  if (s) localStorage.setItem(LS_KEY, JSON.stringify(s));
+  else localStorage.removeItem(LS_KEY);
+}
+
+class AuthLost extends Error {}
+
+async function api(path, opts = {}) {
+  const isForm = opts.body instanceof FormData;
+  const headers = { ...(isForm ? {} : { "Content-Type": "application/json" }), ...(opts.headers || {}) };
+  const session = loadSession();
+  if (session && session.token) headers["Authorization"] = `Bearer ${session.token}`;
+  const res = await fetch(API + path, {
+    method: opts.method || "GET",
+    headers,
+    body: opts.body ? (isForm ? opts.body : JSON.stringify(opts.body)) : undefined,
+  });
+  if (res.status === 204) return null;
+  const text = await res.text();
+  let data = null;
+  if (text) { try { data = JSON.parse(text); } catch { data = { detail: text }; } }
+  if (!res.ok) {
+    if (res.status === 401) throw new AuthLost();
+    const detail = data && data.detail;
+    const msg = typeof detail === "string" ? detail
+      : Array.isArray(detail) && detail[0] ? `${detail[0].loc.slice(1).join(".")}: ${detail[0].msg}`
+      : `请求失败 (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function fmtTime(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z");
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const hm = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  return sameDay ? hm : `${d.getMonth()+1}/${d.getDate()} ${hm}`;
+}
+
+const STATUS_BADGE = {
+  completed: ["ok", "成功"], running: ["run", "运行中"], pending: ["wait", "排队"],
+  failed: ["fail", "失败"],
+};
+const SOURCE_LABEL = { chat: "对话", evaluation: "评测" };
+const ROLE_LABEL = { owner: "所有者", admin: "管理员", member: "成员", viewer: "只读" };
+
+async function runSSE(threadId, content, handlers) {
+  let res;
+  try {
+    const session = loadSession();
+    res = await fetch(`${API}/threads/${threadId}/runs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+        "Authorization": `Bearer ${session?.token || ""}`,
+      },
+      body: JSON.stringify({ content }),
+      signal: handlers.signal || undefined,
+    });
+  } catch (e) {
+    if (e.name === "AbortError") { handlers.onAbort && handlers.onAbort(); return; }
+    handlers.onError("网络错误，请检查服务是否可用");
+    return;
+  }
+  if (!res.ok) {
+    let msg = `请求失败 (${res.status})`;
+    try { const b = await res.json(); if (b.detail) msg = b.detail; } catch {}
+    if (res.status === 401) handlers.onAuthLost();
+    else handlers.onError(msg);
+    return;
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let sep;
+      while ((sep = buf.indexOf("\n\n")) >= 0) {
+        const frame = buf.slice(0, sep);
+        buf = buf.slice(sep + 2);
+        let event = null, dataLine = "";
+        frame.split("\n").forEach((line) => {
+          if (line.startsWith("event:")) event = line.slice(6).trim();
+          else if (line.startsWith("data:")) dataLine += line.slice(5).trim();
+        });
+        if (!event) continue;
+        let data = {};
+        try { data = JSON.parse(dataLine); } catch {}
+        if (event === "token") handlers.onToken(data.text);
+        else if (event === "thinking") handlers.onThinking && handlers.onThinking(data.text);
+        else if (event === "tool_call") handlers.onToolCall(data);
+        else if (event === "tool_result") handlers.onToolResult(data);
+        else if (event === "done") handlers.onDone(data);
+        else if (event === "error") handlers.onError(data.message, data.run_id);
+      }
+    }
+  } catch (e) {
+    if (e.name === "AbortError" && handlers.signal && handlers.signal.aborted) {
+      handlers.onAbort && handlers.onAbort();       // user-initiated switch/unmount
+    } else if (e.name === "AbortError") {
+      handlers.onError("连接被中断，请重试");         // browser killed the stream; unstick the UI
+    } else {
+      handlers.onError("响应流读取失败");
+    }
+  }
+}
+
+/* ============================== auth page ============================== */
+
+function AuthPage({ onAuthed }) {
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({ email: "", password: "", display_name: "", org_name: "" });
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setError(""); setBusy(true);
+    try {
+      const path = mode === "login" ? "/auth/login" : "/auth/signup";
+      const body = mode === "login"
+        ? { email: form.email, password: form.password }
+        : form;
+      const data = await api(path, { method: "POST", body });
+      onAuthed({ token: data.token, user: data.user, tenants: data.tenants });
+    } catch (e) {
+      if (e instanceof AuthLost) return;
+      setError(e.message);
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="auth-wrap">
+      <form className="auth-card" onSubmit={submit}>
+        <div className="auth-logo"><span className="dot" />智脑工业智能体平台</div>
+        <div className="auth-sub">面向装备制造的非标设计智能助手平台 · 工业大脑知识引擎</div>
+        <div className="auth-tabs">
+          <button type="button" className={mode==="login"?"active":""} onClick={()=>setMode("login")}>登录</button>
+          <button type="button" className={mode==="signup"?"active":""} onClick={()=>setMode("signup")}>注册</button>
+        </div>
+        {error && <div className="form-error">{error}</div>}
+        {mode === "signup" && (
+          <div className="field">
+            <label>姓名</label>
+            <input value={form.display_name} onChange={e=>setForm({...form, display_name:e.target.value})}
+              placeholder="你的名字" required />
+          </div>
+        )}
+        <div className="field">
+          <label>邮箱</label>
+          <input type="email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})}
+            placeholder="you@company.com" required />
+        </div>
+        <div className="field">
+          <label>密码</label>
+          <input type="password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})}
+            placeholder="至少 8 位" minLength={8} required />
+        </div>
+        {mode === "signup" && (
+          <div className="field">
+            <label>组织名称（可选）</label>
+            <input value={form.org_name} onChange={e=>setForm({...form, org_name:e.target.value})}
+              placeholder="例如：产品研发部" />
+          </div>
+        )}
+        <button className="btn btn-primary btn-block" disabled={busy}>
+          {busy ? "请稍候…" : mode === "login" ? "登录" : "创建账号"}
+        </button>
+        {mode === "login"
+          ? <div className="hint">演示账号 demo@local / demo1234</div>
+          : <div className="hint">注册后将自动创建你的组织</div>}
+      </form>
+    </div>
+  );
+}
+
+/* ============================== sidebar ============================== */
+
+function Sidebar({ session, view, setView, projects, projectId, onOpenProject, onNewProject, onBackToPortal }) {
+  const nav = [
+    ["home", "🏠", "首页"], ["agents", "🤖", "智能体"],
+    ["eval", "📊", "评测"], ["traces", "🔍", "运行追踪"], ["settings", "⚙️", "设置"],
+  ];
+  const projectActive = view === "project" || view === "chat";
+
+  return (
+    <aside className="sidebar">
+      <div className="brand"><span className="dot" />DeepAgents</div>
+      {onBackToPortal && (
+        <button className="btn" style={{margin:"0 14px 10px", height:32, fontSize:13, padding:"0 12px"}} onClick={onBackToPortal}>← 返回门户</button>
+      )}
+      <button className="new-task" onClick={onNewProject}>＋ 新建项目</button>
+      <nav className="nav">
+        {nav.map(([key, ico, label]) => (
+          <button key={key} className={`nav-item ${view===key?"active":""}`} onClick={()=>setView(key)}>
+            <span className="nav-ico">{ico}</span>{label}
+          </button>
+        ))}
+      </nav>
+      <div className="nav-sec-row">
+        <span className="label">项目</span>
+        <button className="sec-add" onClick={onNewProject} title="新建项目">＋</button>
+      </div>
+      <div className="recent">
+        {projects.length === 0 && <div className="empty" style={{padding:"10px 6px"}}>暂无项目</div>}
+        {projects.map(p => (
+          <div key={p.id} className={`recent-item ${projectActive && projectId===p.id ? "active" : ""}`}
+               onClick={() => onOpenProject(p.id)} title={p.name}>
+            <div className="proj-item">
+              <span className="pico">📁</span>
+              <span className="truncate" style={{flex:1}}>{p.name}</span>
+            </div>
+            <div className="recent-sub">{p.thread_count} 个对话</div>
+          </div>
+        ))}
+      </div>
+      <div className="usercard">
+        <div className="who" onClick={()=>setView("settings")}>
+          <div className="avatar">{(session.user.display_name||session.user.email).slice(0,1).toUpperCase()}</div>
+          <div className="user-meta">
+            <div className="n">{session.user.display_name}</div>
+            <div className="t">{session.user.tenant_name} · {ROLE_LABEL[session.user.role]||session.user.role}</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ============================== project view ============================== */
+
+function ProjectModal({ onClose, notify, onCreated }) {
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function create() {
+    setBusy(true);
+    try {
+      const p = await api("/projects", { method: "POST", body: { name: name.trim() } });
+      onCreated(p);
+      onClose();
+    } catch (e) { notify(e.message, "err"); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div className="modal-mask" onMouseDown={onClose}>
+      <div className="modal" style={{width:420}} onMouseDown={e=>e.stopPropagation()}>
+        <h3>新建项目</h3>
+        <div className="field">
+          <label>项目名称</label>
+          <input value={name} onChange={e=>setName(e.target.value)} autoFocus maxLength={80}
+            placeholder="填写项目名称，不填将默认使用「新项目」"
+            onKeyDown={e=>{ if(e.key==="Enter") create(); }} />
+          <div className="hint-line">📁 项目目录：该项目下生成和上传的文件默认保存在这里，各项目的文件相互隔离。</div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={create} disabled={busy}>{busy?"创建中…":"创建"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConversationColumn({ project, threads, threadId, onOpenThread, onNewConversation }) {
+  return (
+    <div className="conv-col">
+      <div className="conv-head">
+        <div className="name"><span className="pico">📁</span>{project.name}</div>
+        <div className="conv-sub">项目 · {threads.length} 个对话</div>
+      </div>
+      <button className="conv-new" onClick={onNewConversation}>＋ 新建对话</button>
+      <div className="conv-list">
+        {threads.length === 0 && <div className="empty" style={{padding:"14px 8px"}}>暂无对话</div>}
+        {threads.map(t => (
+          <div key={t.id} className={`conv-item ${threadId===t.id?"active":""}`}
+               onClick={()=>onOpenThread(t.id)} title={t.title || "未命名对话"}>
+            <div className="t">{t.title || "未命名对话"}</div>
+            <div className="s">{t.agent_name} · {fmtTime(t.updated_at)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== home ============================== */
+
+const TABS = ["办公写作", "数据分析", "代码开发", "知识问答", "流程自动化"];
+const CHIPS = ["帮我写周报", "总结会议纪要", "分析这份表格", "生成 SQL", "翻译邮件", "头脑风暴"];
+const PRACTICE = [
+  ["📝", "周报生成器", "把零散工作记录整理成结构化周报"],
+  ["📈", "销售数据洞察", "上传 CSV，自动分析趋势并给建议"],
+  ["🐍", "Python 小工具", "描述需求，直接生成并在沙箱验证代码"],
+  ["🌐", "竞品调研", "收集信息、对比维度并输出结论"],
+  ["📧", "商务邮件润色", "语气得体，支持中英双语"],
+  ["✅", "任务拆解", "复杂项目自动拆解为可执行待办"],
+  ["🧮", "精确计算", "通过计算器工具保证数字准确"],
+  ["🔍", "代码库检索", "按语义/正则在项目中快速定位"],
+  ["📚", "文档问答", "基于本地文件回答问题并注明出处"],
+];
+
+function HomeView({ agents, projects, onPickAgent, onStartChat }) {
+  const [tab, setTab] = useState(TABS[0]);
+  const [text, setText] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [seed, setSeed] = useState(0);
+
+  useEffect(() => {
+    if (!agentId && agents.length) setAgentId(agents[0].id);
+  }, [agents]);
+
+  const cards = useMemo(() => {
+    const pool = [...PRACTICE];
+    const out = [];
+    let s = seed;
+    for (let i = 0; i < 6; i++) {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      out.push(pool[s % pool.length]);
+    }
+    return out;
+  }, [seed]);
+
+  function send() {
+    const content = text.trim();
+    if (!content || !agentId) return;
+    onStartChat(agentId, content, projectId);
+  }
+
+  return (
+    <div className="home">
+      <div className="greet">你好，今天想让智能体帮你做什么？</div>
+      <div className="greet-sub">选择一个智能体，直接描述你想做的事</div>
+      <div className="tabs">
+        {TABS.map(t => <button key={t} className={`tab ${tab===t?"active":""}`} onClick={()=>setTab(t)}>{t}</button>)}
+      </div>
+      <div className="chips">
+        {CHIPS.map(c => <button key={c} className="chip" onClick={()=>setText(c)}>{c}</button>)}
+      </div>
+      <div className="composer">
+        <textarea value={text} onChange={e=>setText(e.target.value)}
+          placeholder="输入任务，例如：帮我把今天的工作记录整理成周报…"
+          onKeyDown={e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)) send(); }} />
+        <div className="composer-bar">
+          <select value={agentId} onChange={e=>{setAgentId(e.target.value); onPickAgent(e.target.value);}}>
+            {agents.length === 0 && <option value="">（暂无智能体，请先创建）</option>}
+            {agents.map(a => <option key={a.id} value={a.id}>{a.name}{a.sandbox_enabled?" · 沙箱":""}</option>)}
+          </select>
+          <select value={projectId} onChange={e=>setProjectId(e.target.value)}
+            style={{marginLeft:8,minWidth:140}}>
+            <option value="">新建项目</option>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <span className="spacer" />
+          <span style={{fontSize:11.5,color:"var(--ink-3)"}}>⌘/Ctrl + Enter 发送</span>
+          <button className="send-btn" onClick={send} disabled={!text.trim()||!agentId}>发送</button>
+        </div>
+      </div>
+      <div className="practice">
+        <div className="practice-h">
+          <h3>💡 最佳实践</h3>
+          <button className="link-btn" onClick={()=>setSeed(seed+1)}>换一批 ↻</button>
+        </div>
+        <div className="cards">
+          {cards.map(([ico, ttl, desc], i) => (
+            <div key={i} className="pcard" onClick={()=>setText(desc)}>
+              <div className="ico">{ico}</div>
+              <div className="ttl">{ttl}</div>
+              <div className="desc">{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== chat ============================== */
+
+function ThinkingBlock({ text, active }) {
+  // Expanded while reasoning streams; auto-collapsed once the answer starts.
+  const [open, setOpen] = useState(true);
+  useEffect(() => { if (!active) setOpen(false); }, [active]);
+  return (
+    <div className="think-box">
+      <div className={`think-head ${active ? "noclick" : ""}`} onClick={() => { if (!active) setOpen(o => !o); }}>
+        {active
+          ? <><span className="spin" /> 深度思考中…</>
+          : <>💭 深度思考 <span className={`think-chev ${open ? "open" : ""}`}>⌄</span></>}
+      </div>
+      {open && text && <div className="think-body">{text}</div>}
+    </div>
+  );
+}
+
+function ChatView({ threadId, agents, pendingSend, onConsumePending, onThreadTitle, registerRefresh }) {
+  const [messages, setMessages] = useState([]);
+  const [running, setRunning] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const tickRef = useRef(0);
+  const bottomRef = useRef(null);
+  const taRef = useRef(null);
+
+  useEffect(() => {
+    if (!threadId) { setLoading(false); return; }
+    setLoading(true); setNotFound(false); setMessages([]);
+    api(`/threads/${threadId}/messages`)
+      .then(rows => {
+        setMessages(rows.map(m => ({
+          role: m.role, content: m.content,
+          toolCards: m.role === "assistant" && m.tool_calls
+            ? m.tool_calls.map(tc => ({ key: tc.id || tc.name, name: tc.name, state: "ok" })) : [],
+        })));
+      })
+      .catch(e => { if (!(e instanceof AuthLost)) setNotFound(true); })
+      .finally(()=>setLoading(false));
+  }, [threadId]);
+
+  useEffect(() => {
+    if (pendingSend && threadId && !loading) {
+      const content = pendingSend;
+      onConsumePending();
+      send(content);
+    }
+  }, [pendingSend, threadId, loading]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, running]);
+
+  async function send(contentRaw) {
+    const content = (contentRaw ?? draft).trim();
+    if (!content || running || !threadId) return;
+    setDraft("");
+    setRunning(true);
+    const myTick = ++tickRef.current;
+    setMessages(ms => [...ms, { role: "user", content, toolCards: [] }]);
+    const asst = { role: "assistant", content: "", toolCards: [], error: "", streaming: true, tokens: null, thinking: "", pending: true };
+    setMessages(ms => [...ms, asst]);
+
+    const patchLast = (fn) => {
+      if (tickRef.current !== myTick) return;
+      setMessages(ms => ms.map((m, i) => i === ms.length - 1 ? fn(m) : m));
+    };
+
+    await runSSE(threadId, content, {
+      onToken: (t) => patchLast(m => ({ ...m, content: m.content + t, pending: false })),
+      onThinking: (t) => patchLast(m => ({ ...m, thinking: m.thinking + t, pending: t ? false : m.pending })),
+      onToolCall: (d) => patchLast(m => ({
+        ...m, toolCards: [...m.toolCards, { key: d.id || `${d.name}-${Date.now()}`, name: d.name, state: "run", args: d.args }],
+      })),
+      onToolResult: (d) => patchLast(m => ({
+        ...m,
+        toolCards: m.toolCards.map(c =>
+          (!c.state || c.state === "run") && (!d.id || c.key === d.id)
+            ? { ...c, state: "ok", detail: d.content }
+            : c),
+      })),
+      onDone: (d) => {
+        patchLast(m => ({ ...m, content: d.content || m.content, streaming: false, tokens: d.tokens }));
+        setRunning(false);
+        onThreadTitle?.(threadId, content);
+        registerRefresh?.();
+      },
+      onError: (msg) => {
+        patchLast(m => ({ ...m, streaming: false, error: msg }));
+        setRunning(false);
+        registerRefresh?.();
+      },
+      onAuthLost: () => { window.location.reload(); },
+    });
+  }
+
+  if (!threadId) return <div className="empty-chat">从首页发起新对话，或在左侧选择一条对话</div>;
+  if (loading) return <div className="empty-chat"><span className="spin" /> 加载中…</div>;
+  if (notFound) return <div className="empty-chat">对话不存在或无权访问</div>;
+
+  return (
+    <div className="chat-wrap">
+      <div className="messages">
+        {messages.length === 0 && <div className="empty-chat">开始你的第一条消息</div>}
+        {messages.map((m, i) => (
+          <div key={i} className={`msg-row ${m.role}`}>
+            <div className="msg-avatar">{m.role === "user" ? "我" : "AI"}</div>
+            <div className="bubble">
+              {m.role === "assistant" && (m.pending || m.thinking) && (
+                <ThinkingBlock text={m.thinking} active={m.streaming && !m.content} />
+              )}
+              {m.toolCards && m.toolCards.length > 0 && (
+                <div className="tool-chips">
+                  {m.toolCards.map(tc => (
+                    <div key={tc.key} className="tool-chip">
+                      <span>🔧 {tc.name}</span>
+                      <span className={`state ${tc.state}`}>
+                        {tc.state === "run" ? "执行中" : tc.state === "err" ? "失败" : "完成"}
+                      </span>
+                      {tc.detail && <pre>{tc.detail}</pre>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {m.content ? <Markdown text={m.content} /> : null}
+              {m.streaming && <span className="cursor" />}
+              {m.error && <div className="msg-err">⚠ {m.error}</div>}
+              {m.tokens && !m.streaming && (
+                <div style={{fontSize:10.5,color:"var(--ink-3)",marginTop:6}}>
+                  tokens: {m.tokens.total_tokens} · 输入 {m.tokens.input_tokens} / 输出 {m.tokens.output_tokens}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+      <div className="chat-composer">
+        <div className="inner">
+          <textarea ref={taRef} value={draft}
+            onChange={e=>setDraft(e.target.value)}
+            onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); send(); } }}
+            placeholder={running ? "智能体执行中…" : "输入消息，Enter 发送，Shift+Enter 换行"}
+            disabled={running} rows={2} />
+          <div className="chat-bar">
+            <span style={{fontSize:11.5,color:"var(--ink-3)"}}>
+              {running ? <><span className="spin" /> 正在运行</> : "Enter 发送"}
+            </span>
+            <span className="spacer" />
+            <button className="send-btn" onClick={()=>send()} disabled={running||!draft.trim()}>发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== agents ============================== */
+
+function AgentModal({ catalog, initial, onClose, onSaved, notify }) {
+  const [form, setForm] = useState(initial || {
+    name: "", description: "", system_prompt: "", model: "", tools: [],
+    sandbox_enabled: false, planning_enabled: false,
+  });
+  const [busy, setBusy] = useState(false);
+
+  function toggleTool(name, on) {
+    const tools = on ? [...new Set([...form.tools, name])] : form.tools.filter(t => t !== name);
+    setForm({ ...form, tools });
+  }
+
+  async function save() {
+    if (!form.name.trim()) { notify("请填写智能体名称", "err"); return; }
+    setBusy(true);
+    try {
+      if (initial) await api(`/agents/${initial.id}`, { method: "PUT", body: form });
+      else await api("/agents", { method: "POST", body: form });
+      onSaved();
+      onClose();
+    } catch (e) { notify(e.message, "err"); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div className="modal-mask" onMouseDown={onClose}>
+      <div className="modal" onMouseDown={e=>e.stopPropagation()}>
+        <h3>{initial ? "编辑智能体" : "新建智能体"}</h3>
+        <div className="field">
+          <label>名称 *</label>
+          <input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="例如：周报助手" maxLength={80} />
+        </div>
+        <div className="field">
+          <label>描述</label>
+          <input value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="一句话说明用途" />
+        </div>
+        <div className="field">
+          <label>系统提示词（System Prompt）</label>
+          <textarea rows={3} value={form.system_prompt}
+            onChange={e=>setForm({...form,system_prompt:e.target.value})}
+            placeholder="定义角色、风格与边界，例如：你是严谨的财务分析师，所有计算必须使用 calculate 工具。" />
+        </div>
+        <div className="field">
+          <label>平台工具（harness 文件工具默认可用）</label>
+          <div className="tool-pick">
+            {(catalog?.platform || []).map(t => {
+              const on = form.tools.includes(t.name);
+              return (
+                <label key={t.name} className={on?"on":""}>
+                  <input type="checkbox" checked={on} onChange={e=>toggleTool(t.name, e.target.checked)} />
+                  <span><b>{t.label}</b> <span className="mono">({t.name})</span>
+                    <div className="d">{t.description}</div></span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+        <div className="field">
+          <label>能力开关</label>
+          {(catalog?.capabilities || []).map(cap => (
+            <div key={cap.name} className={`switch-row ${cap.risk?"risk":""}`}>
+              <div>
+                <div style={{fontWeight:600,fontSize:13}}>{cap.label}</div>
+                <div className="meta">{cap.description}</div>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={form[cap.name]}
+                  onChange={e=>setForm({...form,[cap.name]:e.target.checked})} />
+                <span className="track" />
+              </label>
+            </div>
+          ))}
+        </div>
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}>{busy?"保存中…":"保存"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AgentsView({ session, agents, reloadAgents, catalog, notify }) {
+  const [editing, setEditing] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const canManage = ["owner", "admin"].includes(session.user.role);
+
+  async function remove(a) {
+    if (!confirm(`确认删除智能体「${a.name}」？其历史会话与评测关联仍会保留。`)) return;
+    try {
+      await api(`/agents/${a.id}`, { method: "DELETE" });
+      notify("已删除", "ok");
+      reloadAgents();
+    } catch (e) { notify(e.message, "err"); }
+  }
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <h2>智能体</h2>
+        <span className="spacer" />
+        {canManage
+          ? <button className="btn btn-primary btn-sm" onClick={()=>setCreating(true)}>＋ 新建智能体</button>
+          : <span className="lf-tag">仅管理员可管理智能体</span>}
+      </div>
+      {agents.length === 0
+        ? <div className="card empty">还没有智能体，点击右上角创建</div>
+        : (
+          <div className="card">
+            <table className="tbl">
+              <thead><tr><th>名称</th><th>描述</th><th>工具</th><th>能力</th><th>更新时间</th><th></th></tr></thead>
+              <tbody>
+                {agents.map(a => (
+                  <tr key={a.id}>
+                    <td style={{fontWeight:600}}>{a.name}</td>
+                    <td style={{color:"var(--ink-2)",maxWidth:220}}>{a.description || "—"}</td>
+                    <td>
+                      {a.tools.length === 0 ? <span className="lf-tag">仅内置</span>
+                        : a.tools.map(t => <span key={t} className="lf-tag mono" style={{marginRight:4}}>{t}</span>)}
+                    </td>
+                    <td>
+                      {a.sandbox_enabled && <span className="badge run" style={{marginRight:4}}>沙箱</span>}
+                      {a.planning_enabled && <span className="badge role-admin" style={{marginRight:4}}>规划</span>}
+                      {!a.sandbox_enabled && !a.planning_enabled && <span style={{color:"var(--ink-3)"}}>—</span>}
+                    </td>
+                    <td className="truncate" style={{color:"var(--ink-3)"}}>{fmtTime(a.updated_at)}</td>
+                    <td style={{textAlign:"right",whiteSpace:"nowrap"}}>
+                      {canManage && <>
+                        <button className="btn btn-sm" onClick={()=>setEditing(a)}>编辑</button>{" "}
+                        <button className="btn btn-sm btn-danger" onClick={()=>remove(a)}>删除</button>
+                      </>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      {(creating || editing) && (
+        <AgentModal catalog={catalog} initial={editing}
+          onClose={()=>{setCreating(false);setEditing(null);}}
+          onSaved={reloadAgents} notify={notify} />
+      )}
+    </div>
+  );
+}
+
+/* ============================== evaluation ============================== */
+
+function EvalView({ agents, notify, onOpenTrace }) {
+  const [datasets, setDatasets] = useState([]);
+  const [dsId, setDsId] = useState(null);
+  const [cases, setCases] = useState([]);
+  const [runs, setRuns] = useState([]);
+  const [runDetail, setRunDetail] = useState(null);
+  const [newDs, setNewDs] = useState("");
+  const [caseForm, setCaseForm] = useState({ input: "", expected: "" });
+  const [runForm, setRunForm] = useState({ agent_id: "", judge: "contains" });
+  const [showRun, setShowRun] = useState(false);
+
+  const loadDatasets = useCallback(() => {
+    api("/eval/datasets").then(rows => {
+      setDatasets(rows);
+      setDsId(cur => cur && rows.some(r=>r.id===cur) ? cur : (rows[0]?.id || null));
+    }).catch(()=>{});
+  }, []);
+  const loadRuns = useCallback(() => {
+    api("/eval/runs").then(setRuns).catch(()=>{});
+  }, []);
+
+  useEffect(() => { loadDatasets(); loadRuns(); }, []);
+  useEffect(() => {
+    if (!dsId) { setCases([]); return; }
+    api(`/eval/datasets/${dsId}`).then(setCases).catch(()=>{});
+  }, [dsId]);
+
+  // Poll while any run is in progress
+  useEffect(() => {
+    const busy = runs.some(r => ["pending","running"].includes(r.status));
+    if (!busy) return;
+    const t = setInterval(loadRuns, 1500);
+    return () => clearInterval(t);
+  }, [runs, loadRuns]);
+
+  // Poll the open detail itself while it is still running; list rows carry no results
+  useEffect(() => {
+    if (!runDetail || !["pending", "running"].includes(runDetail.status)) return;
+    const t = setTimeout(() => { openRun(runDetail.id); }, 1500);
+    return () => clearTimeout(t);
+  }, [runDetail]);
+
+  async function createDataset() {
+    const name = newDs.trim();
+    if (!name) return;
+    try {
+      const d = await api("/eval/datasets", { method:"POST", body:{ name, description:"" } });
+      setNewDs(""); loadDatasets(); setDsId(d.id);
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function addCase(e) {
+    e.preventDefault();
+    if (!caseForm.input.trim() || !dsId) return;
+    try {
+      await api(`/eval/datasets/${dsId}/cases`, { method:"POST", body: caseForm });
+      setCaseForm({ input:"", expected:"" });
+      const [cs] = await Promise.all([api(`/eval/datasets/${dsId}`)]);
+      setCases(cs); loadDatasets();
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function delCase(cid) {
+    await api(`/eval/cases/${cid}`, { method:"DELETE" });
+    setCases(await api(`/eval/datasets/${dsId}`)); loadDatasets();
+  }
+  async function startRun() {
+    if (!runForm.agent_id || !dsId) return;
+    try {
+      const r = await api("/eval/runs", { method:"POST",
+        body:{ dataset_id: dsId, agent_id: runForm.agent_id, judge: runForm.judge } });
+      setShowRun(false); loadRuns();
+      setTimeout(()=>openRun(r.id), 300);
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function openRun(id) {
+    try { setRunDetail(await api(`/eval/runs/${id}`)); }
+    catch (e) { if (!(e instanceof AuthLost)) notify(e.message, "err"); }
+  }
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <h2>评测</h2>
+        <span className="spacer" />
+        <button className="btn btn-primary btn-sm" disabled={!dsId || agents.length===0}
+          onClick={()=>{ setRunForm(f=>({...f, agent_id:f.agent_id||agents[0]?.id||""})); setShowRun(true); }}>
+          发起评测
+        </button>
+      </div>
+      <div className="eval-layout">
+        <div className="card ds-list">
+          <div style={{display:"flex",gap:6,padding:"4px 6px 10px"}}>
+            <input style={{flex:1,border:"1px solid var(--line)",borderRadius:8,padding:"6px 9px"}}
+              placeholder="新建数据集" value={newDs} onChange={e=>setNewDs(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter")createDataset();}} />
+            <button className="btn btn-sm btn-primary" onClick={createDataset}>＋</button>
+          </div>
+          {datasets.length === 0 && <div className="empty">先创建一个数据集</div>}
+          {datasets.map(d => (
+            <button key={d.id} className={`ds-item ${dsId===d.id?"active":""}`} onClick={()=>setDsId(d.id)}
+              style={{display:"block",width:"100%",border:0,background:"transparent",textAlign:"left",font:"inherit",color:"inherit"}}>
+              {d.name} <span className="n">· {d.case_count} 条</span>
+            </button>
+          ))}
+          <div className="section-title">最近评测</div>
+          {runs.slice(0,6).map(r => {
+            const [cls, label] = STATUS_BADGE[r.status] || ["wait", r.status];
+            return (
+              <button key={r.id} className="ds-item" onClick={()=>openRun(r.id)}
+                style={{display:"block",width:"100%",border:0,background:"transparent",textAlign:"left",font:"inherit",color:"inherit"}}>
+                <span className={`badge ${cls}`}>{label}</span>{" "}
+                <span className="n">{r.judge} · {r.passed}/{r.total}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div>
+          <div className="card" style={{padding:16,marginBottom:16}}>
+            <div style={{fontWeight:650,marginBottom:10}}>用例</div>
+            {!dsId && <div className="empty">请选择或创建数据集</div>}
+            {dsId && (
+              <>
+                {cases.length === 0 && <div className="empty">暂无用例，在下方添加</div>}
+                {cases.length > 0 && (
+                  <table className="tbl" style={{marginBottom:12}}>
+                    <thead><tr><th style={{width:"38%"}}>输入</th><th style={{width:"38%"}}>期望</th><th></th></tr></thead>
+                    <tbody>
+                      {cases.map(c => (
+                        <tr key={c.id}>
+                          <td className="case-output">{c.input}</td>
+                          <td className="case-output">{c.expected || "—"}</td>
+                          <td style={{textAlign:"right"}}>
+                            <button className="btn btn-sm btn-danger" onClick={()=>delCase(c.id)}>删除</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                <form onSubmit={addCase} style={{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:8}}>
+                  <input placeholder="用户输入（如：123 乘以 456 等于多少）"
+                    value={caseForm.input} onChange={e=>setCaseForm({...caseForm,input:e.target.value})}
+                    style={{border:"1px solid var(--line)",borderRadius:9,padding:"8px 10px"}} />
+                  <input placeholder="期望（contains 用 | 分隔多个关键词）"
+                    value={caseForm.expected} onChange={e=>setCaseForm({...caseForm,expected:e.target.value})}
+                    style={{border:"1px solid var(--line)",borderRadius:9,padding:"8px 10px"}} />
+                  <button className="btn btn-primary btn-sm">添加</button>
+                </form>
+              </>
+            )}
+          </div>
+
+          {runDetail && (
+            <div className="card" style={{padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                <b>评测报告</b>
+                {(() => { const [cls,label] = STATUS_BADGE[runDetail.status]||["wait",runDetail.status];
+                  return <span className={`badge ${cls}`}>{label}</span>; })()}
+                <span className="spacer" />
+                <button className="btn btn-sm" onClick={()=>setRunDetail(null)}>关闭</button>
+              </div>
+              <div className="stat-grid" style={{gridTemplateColumns:"repeat(4,1fr)"}}>
+                <div className="stat"><div className="k">用例数</div><div className="v">{runDetail.total}</div></div>
+                <div className="stat"><div className="k">通过</div><div className="v" style={{color:"var(--green)"}}>{runDetail.passed}</div></div>
+                <div className="stat"><div className="k">通过率</div><div className="v">{Math.round((runDetail.pass_rate||0)*100)}%</div></div>
+                <div className="stat"><div className="k">平均分</div><div className="v">{(runDetail.mean_score||0).toFixed(2)}</div></div>
+              </div>
+              {runDetail.error && <div className="form-error">{runDetail.error}</div>}
+              {runDetail.results && runDetail.results.length > 0 && (
+                <table className="tbl">
+                  <thead><tr><th>#</th><th>输入 / 输出</th><th>评分</th><th>评语</th><th></th></tr></thead>
+                  <tbody>
+                    {[...runDetail.results].sort((a,b)=>a.idx-b.idx).map(r => (
+                      <tr key={r.id}>
+                        <td>{r.idx+1}</td>
+                        <td>
+                          <div style={{fontWeight:600}}>{r.input}</div>
+                          <div className="case-output" style={{marginTop:4}}>
+                            {r.output ? <span>↳ {r.output}</span> : <span style={{color:"var(--red)"}}>{r.judge_error||"无输出"}</span>}
+                          </div>
+                          <div style={{fontSize:11,color:"var(--ink-3)",marginTop:3}}>期望：{r.expected || "—"} · {r.latency_ms}ms</div>
+                        </td>
+                        <td className={`score-cell ${r.score>=0.6?"score-pass":"score-fail"}`}>{r.score.toFixed(1)}</td>
+                        <td style={{fontSize:12,color:"var(--ink-2)",maxWidth:200}}>{r.judge_error || r.judge_reason}</td>
+                        <td style={{whiteSpace:"nowrap"}}>
+                          {r.trace_run_id && <button className="btn btn-sm" onClick={()=>onOpenTrace(r.trace_run_id)}>trace →</button>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showRun && (
+        <div className="modal-mask" onMouseDown={()=>setShowRun(false)}>
+          <div className="modal" onMouseDown={e=>e.stopPropagation()} style={{width:420}}>
+            <h3>发起评测</h3>
+            <div className="field">
+              <label>选择智能体</label>
+              <select value={runForm.agent_id} onChange={e=>setRunForm({...runForm,agent_id:e.target.value})}>
+                {agents.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>评分方式</label>
+              <select value={runForm.judge} onChange={e=>setRunForm({...runForm,judge:e.target.value})}>
+                <option value="contains">包含关键词（| 分隔，全部命中）</option>
+                <option value="exact">归一化精确匹配</option>
+                <option value="llm_judge">LLM 裁判（0–1 打分）</option>
+              </select>
+            </div>
+            <div className="modal-foot">
+              <button className="btn" onClick={()=>setShowRun(false)}>取消</button>
+              <button className="btn btn-primary" onClick={startRun}>开始</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================== traces ============================== */
+
+function TraceDrawer({ runId, onClose, onJumpEval }) {
+  const [d, setD] = useState(null);
+  useEffect(() => {
+    if (!runId) return;
+    api(`/traces/${runId}`).then(setD).catch(()=>setD(null));
+  }, [runId]);
+  if (!runId) return null;
+  return (
+    <>
+      <div className="drawer-mask" onClick={onClose} />
+      <div className="drawer">
+        <div className="drawer-head">
+          <b>运行详情</b>
+          {d && (() => { const [cls,label] = STATUS_BADGE[d.status]||["wait",d.status];
+            return <span className={`badge ${cls}`}>{label}</span>; })()}
+          <span className="spacer" />
+          <button className="btn btn-sm" onClick={onClose}>关闭</button>
+        </div>
+        <div className="drawer-body">
+          {!d && <div className="empty">加载中…</div>}
+          {d && (
+            <>
+              <div className="kv">
+                <span className="k">Run ID</span><span className="mono" style={{fontSize:11}}>{d.id}</span>
+                <span className="k">来源</span><span>{SOURCE_LABEL[d.source]||d.source}</span>
+                <span className="k">智能体</span><span>{d.agent_name||d.agent_id}</span>
+                <span className="k">耗时</span><span>{d.latency_ms} ms</span>
+                <span className="k">Tokens</span><span>{d.tokens ? d.tokens.total_tokens : "—"}</span>
+                <span className="k">时间</span><span>{fmtTime(d.created_at)}</span>
+                <span className="k">Langfuse</span>
+                <span>{d.langfuse_url
+                  ? <a href={d.langfuse_url} target="_blank" rel="noreferrer">在 Langfuse 中查看 ↗</a>
+                  : <span className="lf-tag">未接入</span>}</span>
+                {d.eval_run_id && <><span className="k">评测</span>
+                  <span><a onClick={onJumpEval} style={{cursor:"pointer"}}>查看评测报告 →</a></span></>}
+              </div>
+              {d.error && <div className="form-error mono" style={{whiteSpace:"pre-wrap"}}>{d.error}</div>}
+              <div className="section-title">输入</div>
+              <div className="tl-data">{d.input_preview}</div>
+              {d.output_preview && <>
+                <div className="section-title">输出</div>
+                <div className="tl-data">{d.output_preview}</div>
+              </>}
+              <div className="section-title">事件时间线（{d.events?.length||0}）</div>
+              <div className="timeline">
+                {(d.events||[]).map(ev => (
+                  <div key={ev.id} className={`tl-item ${ev.type.startsWith("tool")?"tool":""}`}>
+                    <div className="tl-name">{ev.type === "tool_call" ? `🔧 调用 ${ev.name}` : ev.type === "tool_result" ? `✓ ${ev.name} 返回` : ev.name || ev.type}</div>
+                    <div className="tl-time">#{ev.seq} · {fmtTime(ev.created_at)}</div>
+                    {ev.data && Object.keys(ev.data).length > 0 && (
+                      <div className="tl-data mono">{JSON.stringify(ev.data, null, 1)}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TracesView({ initialTraceId, consumeInitial }) {
+  const [rows, setRows] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [filters, setFilters] = useState({ status: "", source: "", agent_id: "" });
+  const [selected, setSelected] = useState(initialTraceId || null);
+
+  useEffect(() => {
+    if (initialTraceId) { setSelected(initialTraceId); consumeInitial(); }
+  }, [initialTraceId]);
+
+  function load() {
+    const q = new URLSearchParams();
+    Object.entries(filters).forEach(([k,v]) => v && q.set(k, v));
+    api(`/traces?${q.toString()}`).then(setRows).catch(()=>{});
+    api("/observability/stats").then(setStats).catch(()=>{});
+  }
+  useEffect(load, [filters.status, filters.source, filters.agent_id]);
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <h2>运行追踪</h2>
+        <span className="spacer" />
+        <button className="btn btn-sm" onClick={load}>刷新</button>
+      </div>
+      <div className="stat-grid">
+        <div className="stat"><div className="k">24h 运行数</div><div className="v">{stats?.runs ?? "-"}</div></div>
+        <div className="stat"><div className="k">成功率</div><div className="v">{stats ? Math.round(stats.success_rate*100)+"%" : "-"}</div></div>
+        <div className="stat"><div className="k">平均耗时</div><div className="v">{stats?.avg_latency_ms ?? "-"}<span style={{fontSize:12,color:"var(--ink-3)"}}> ms</span></div></div>
+        <div className="stat"><div className="k">平均 Tokens</div><div className="v">{stats?.avg_tokens ?? "-"}</div></div>
+      </div>
+      <div className="filters">
+        <select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}>
+          <option value="">全部状态</option>
+          <option value="completed">成功</option>
+          <option value="running">运行中</option>
+          <option value="failed">失败</option>
+        </select>
+        <select value={filters.source} onChange={e=>setFilters({...filters,source:e.target.value})}>
+          <option value="">全部来源</option>
+          <option value="chat">对话</option>
+          <option value="evaluation">评测</option>
+        </select>
+      </div>
+      <div className="card">
+        {rows.length === 0 ? <div className="empty">暂无运行记录</div> : (
+          <table className="tbl">
+            <thead><tr><th>时间</th><th>智能体</th><th>来源</th><th>输入预览</th><th>状态</th><th>耗时</th><th>Tokens</th></tr></thead>
+            <tbody>
+              {rows.map(r => {
+                const [cls,label] = STATUS_BADGE[r.status]||["wait",r.status];
+                return (
+                  <tr key={r.id} className="clickable" onClick={()=>setSelected(r.id)}>
+                    <td className="truncate" style={{width:90}}>{fmtTime(r.created_at)}</td>
+                    <td>{r.agent_name}</td>
+                    <td>{SOURCE_LABEL[r.source]||r.source}</td>
+                    <td className="truncate" style={{maxWidth:340,color:"var(--ink-2)"}}>{r.input_preview}</td>
+                    <td><span className={`badge ${cls}`}>{label}</span></td>
+                    <td>{r.latency_ms}ms</td>
+                    <td>{r.tokens?.total_tokens ?? "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {selected && <TraceDrawer runId={selected} onClose={()=>setSelected(null)}
+        onJumpEval={()=>{ setSelected(null); /* parent switches view */ window.dispatchEvent(new Event("dap:goto-eval")); }} />}
+    </div>
+  );
+}
+
+/* ============================== settings ============================== */
+
+function SettingsView({ session, setSession, notify, onLogout }) {
+  const [members, setMembers] = useState([]);
+  const [keys, setKeys] = useState([]);
+  const [tenants, setTenants] = useState([]);
+  const [invite, setInvite] = useState({ email:"", role:"member" });
+  const [newKeyName, setNewKeyName] = useState("");
+  const [plainKey, setPlainKey] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const isOwner = session.user.role === "owner";
+
+  async function load() {
+    setMembers(await api("/tenants/members"));
+    setKeys(await api("/api-keys"));
+    setTenants(await api("/tenants"));
+  }
+  useEffect(() => { load().catch(()=>{}); }, []);
+
+  async function inviteMember(e) {
+    e.preventDefault();
+    try {
+      await api("/tenants/members", { method:"POST", body: invite });
+      notify("成员已加入", "ok"); setInvite({email:"",role:"member"}); load();
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function changeRole(m, role) {
+    try { await api(`/tenants/members/${m.id}`, { method:"PATCH", body:{ role } }); load(); }
+    catch (e) { notify(e.message, "err"); }
+  }
+  async function remove(m) {
+    if (!confirm(`将 ${m.email} 移出组织？`)) return;
+    try { await api(`/tenants/members/${m.id}`, { method:"DELETE" }); load(); }
+    catch (e) { notify(e.message, "err"); }
+  }
+  async function createKey() {
+    if (!newKeyName.trim()) return;
+    try {
+      const k = await api("/api-keys", { method:"POST", body:{ name:newKeyName.trim() } });
+      setPlainKey(k.plaintext); setNewKeyName(""); load();
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function delKey(id) {
+    await api(`/api-keys/${id}`, { method:"DELETE" }); load();
+  }
+  async function switchTenant(tid) {
+    try {
+      const r = await api("/tenants/switch", { method:"POST", body:{ tenant_id: tid } });
+      const me = await api("/auth/me");
+      const next = { token: r.token, user: me.user, tenants: me.tenants };
+      saveSession(next); setSession(next);
+      notify(`已切换到 ${r.tenant_name}`, "ok");
+      window.location.reload();
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function createOrg(e) {
+    e.preventDefault();
+    if (!orgName.trim()) return;
+    try {
+      await api("/tenants", { method:"POST", body:{ name: orgName.trim() } });
+      notify("组织已创建，请在列表中切换", "ok"); setOrgName(""); load();
+    } catch (e) { notify(e.message, "err"); }
+  }
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <h2>设置</h2>
+        <span className="spacer" />
+        <button className="btn btn-sm btn-danger" onClick={onLogout}>退出登录</button>
+      </div>
+
+      <div className="card" style={{padding:18,marginBottom:16}}>
+        <div className="section-title" style={{marginTop:0}}>我的组织</div>
+        <table className="tbl">
+          <tbody>
+            {tenants.map(t => (
+              <tr key={t.id}>
+                <td style={{fontWeight:600}}>{t.name}</td>
+                <td><span className={`badge role-${t.role}`}>{ROLE_LABEL[t.role]||t.role}</span></td>
+                <td style={{textAlign:"right"}}>
+                  {t.id !== session.user.tenant_id
+                    ? <button className="btn btn-sm" onClick={()=>switchTenant(t.id)}>切换</button>
+                    : <span className="lf-tag">当前</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <form onSubmit={createOrg} style={{display:"flex",gap:8,marginTop:12}}>
+          <input style={{flex:1,border:"1px solid var(--line)",borderRadius:9,padding:"8px 10px"}}
+            placeholder="创建新组织名称" value={orgName} onChange={e=>setOrgName(e.target.value)} />
+          <button className="btn btn-primary btn-sm">创建组织</button>
+        </form>
+      </div>
+
+      <div className="card" style={{padding:18,marginBottom:16}}>
+        <div className="section-title" style={{marginTop:0}}>成员管理</div>
+        <table className="tbl">
+          <thead><tr><th>姓名</th><th>邮箱</th><th>角色</th><th></th></tr></thead>
+          <tbody>
+            {members.map(m => {
+              const ownerCount = members.filter(x=>x.role==="owner").length;
+              const isLastOwner = m.role==="owner" && ownerCount<=1;
+              return (
+                <tr key={m.id}>
+                  <td>{m.display_name}</td>
+                  <td className="mono" style={{fontSize:12}}>{m.email}</td>
+                  <td>
+                    {isOwner && !isLastOwner ? (
+                      <select className="role-select" value={m.role}
+                        onChange={e=>changeRole(m, e.target.value)}>
+                        {["owner","admin","member","viewer"].map(r=><option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+                      </select>
+                    ) : <span className={`badge role-${m.role}`}>{ROLE_LABEL[m.role]||m.role}</span>}
+                    {isLastOwner && <span className="lf-tag" style={{marginLeft:6}}>最后所有者</span>}
+                  </td>
+                  <td style={{textAlign:"right"}}>
+                    {isOwner && !isLastOwner &&
+                      <button className="btn btn-sm btn-danger" onClick={()=>remove(m)}>移除</button>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {["owner","admin"].includes(session.user.role) && (
+          <form onSubmit={inviteMember} style={{display:"flex",gap:8,marginTop:12}}>
+            <input style={{flex:2,border:"1px solid var(--line)",borderRadius:9,padding:"8px 10px"}}
+              placeholder="已注册成员的邮箱" value={invite.email}
+              onChange={e=>setInvite({...invite,email:e.target.value})} />
+            <select value={invite.role} onChange={e=>setInvite({...invite,role:e.target.value})}
+              style={{border:"1px solid var(--line)",borderRadius:9,padding:"8px"}}>
+              <option value="admin">管理员</option>
+              <option value="member">成员</option>
+              <option value="viewer">只读</option>
+            </select>
+            <button className="btn btn-primary btn-sm">添加成员</button>
+          </form>
+        )}
+      </div>
+
+      <div className="card" style={{padding:18}}>
+        <div className="section-title" style={{marginTop:0}}>API Keys（X-API-Key 调用，权限等同成员）</div>
+        {plainKey && (
+          <div style={{marginBottom:12}}>
+            <div style={{fontSize:12.5,color:"var(--amber)",marginBottom:6}}>
+              ⚠ 明文密钥仅显示这一次，请立即保存：
+            </div>
+            <div className="key-box">
+              <span className="mono" style={{flex:1}}>{plainKey}</span>
+              <button className="btn btn-sm" onClick={()=>{navigator.clipboard?.writeText(plainKey);notify("已复制","ok");}}>复制</button>
+            </div>
+          </div>
+        )}
+        <table className="tbl">
+          <thead><tr><th>名称</th><th>前缀</th><th>创建时间</th><th>最近使用</th><th></th></tr></thead>
+          <tbody>
+            {keys.length===0 && <tr><td colSpan={5}><div className="empty">暂无 API Key</div></td></tr>}
+            {keys.map(k => (
+              <tr key={k.id}>
+                <td>{k.name}</td>
+                <td className="mono" style={{fontSize:12}}>{k.key_prefix}…</td>
+                <td>{fmtTime(k.created_at)}</td>
+                <td>{k.last_used_at ? fmtTime(k.last_used_at) : "未使用"}</td>
+                <td style={{textAlign:"right"}}>
+                  {isOwner && <button className="btn btn-sm btn-danger" onClick={()=>delKey(k.id)}>删除</button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {isOwner && (
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <input style={{flex:1,border:"1px solid var(--line)",borderRadius:9,padding:"8px 10px"}}
+              placeholder="Key 名称（如：CI 评测任务）" value={newKeyName}
+              onChange={e=>setNewKeyName(e.target.value)} />
+            <button className="btn btn-primary btn-sm" onClick={createKey}>创建 Key</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== portal shell ============================== */
+
+const PORTAL_AGENT_NAME = "智脑 · 非标方案专家";
+const SKILL_ICONS = { brain:"🧠", globe:"🌐", cart:"🛒", log:"📋", coin:"💰", scan:"📄", gauge:"📊" };
+const TOOL_LABELS = {
+  query_design_rules:"设计规则检索", shaft_size_calculator:"井道尺寸计算", process_route:"工艺路线查询",
+  equipment_params:"设备参数查询", after_sales_policy:"售后政策查询", knowledge_search:"知识库检索",
+  calculate:"计算器", current_datetime:"当前时间", word_count:"字数统计", web_search:"联网搜索",
+  read_file:"读取技能文档", ls:"列出文件", glob:"文件检索", grep:"内容检索",
+  write_file:"写入文件", edit_file:"编辑文件", delete:"删除文件",
+};
+const PORTAL_EXAMPLES = [
+  ["📐", "电梯井道尺寸核算", "ESW 系列，载重 450kg、速度 1.5m/s，轿厢 1200×1200mm，中分门、对重后置，最小井道尺寸是多少？"],
+  ["📄", "布置图参数识别", "帮我识别这张客梯布置图里的井道、轿厢与开门参数，并校核设计余量"],
+  ["🔧", "非标工艺路线", "ESW03 系列非标轿厢的生产工艺路线包含哪些关键工序？"],
+  ["🛠", "售后故障排查", "电梯门系统频繁出现异响，按售后规则应如何排查与处置？"],
+];
+
+function stripPrefixLines(text) {
+  return (text || "").split("\n").filter(l => !/^\s*\[(?:技能：[^\]]+|联网搜索)\]\s*$/.test(l)).join("\n").trim();
+}
+
+function groupThreadsByMonth(threads) {
+  const parse = (iso) => {
+    const d = new Date((iso || "").endsWith("Z") || (iso || "").includes("+") ? iso : iso + "Z");
+    return isNaN(d) ? null : d;
+  };
+  const sorted = [...threads].sort((a, b) => (parse(b.updated_at) || 0) - (parse(a.updated_at) || 0));
+  const groups = [];
+  const index = new Map();
+  for (const t of sorted) {
+    const d = parse(t.updated_at);
+    const key = d ? `${d.getFullYear()}年${d.getMonth() + 1}月` : "更早";
+    if (!index.has(key)) { const g = { key, items: [] }; index.set(key, g); groups.push(g); }
+    index.get(key).items.push(t);
+  }
+  return groups;
+}
+
+function mdToHtml(text) {
+  const src = String(text || "");
+  if (!src) return "";
+  const marked = window.marked, purify = window.DOMPurify;
+  // Plain-text fallback when either CDN lib failed to load: escape everything,
+  // keep line breaks. Never render unsanitized HTML.
+  if (!marked || typeof marked.parse !== "function" || !purify || typeof purify.sanitize !== "function") {
+    const esc = src.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return "<p>" + esc.replace(/\n/g, "<br>") + "</p>";
+  }
+  try {
+    const html = marked.parse(src, { gfm: true, breaks: true });
+    return purify.sanitize(html, { USE_PROFILES: { html: true } });
+  } catch (e) {
+    const esc = src.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return "<p>" + esc.replace(/\n/g, "<br>") + "</p>";
+  }
+}
+
+function Markdown({ text }) {
+  const html = React.useMemo(() => mdToHtml(text), [text]);
+  return <div className="md-body" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function PortalTopBar({ session, onEnterAdmin, onLogout }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const initial = (session.user.display_name || session.user.email || "U").slice(0, 1).toUpperCase();
+  return (
+    <header className="p-topbar">
+      <div className="p-name"><span className="p-logo">智</span>智脑工业智能体平台</div>
+      <span className="spacer" />
+      <button className="p-admin-btn" onClick={onEnterAdmin}>进入后台</button>
+      <div className="p-user" onClick={() => setMenuOpen(o => !o)}>
+        <span className="p-name2">管理员</span>
+        <span className="p-avatar">{initial}</span>
+        {menuOpen && (
+          <div className="p-menu" onMouseLeave={() => setMenuOpen(false)}>
+            <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEnterAdmin(); }}>后台管理</button>
+            <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onLogout(); }}>退出登录</button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function IconRail({ rail, onHistory, onSearch, onSkills, onSettings, searchOn, skillsOn }) {
+  const items = [
+    { key: "history", icon: "🕒", title: "历史", active: rail === "history", onClick: onHistory },
+    { key: "search", icon: "🔍", title: "知识库检索", active: searchOn, onClick: onSearch },
+    { key: "skills", icon: "✂", title: "skills 工具", active: skillsOn, onClick: onSkills },
+    { key: "settings", icon: "⚙️", title: "后台设置", active: false, onClick: onSettings },
+  ];
+  return (
+    <nav className="p-rail">
+      {items.map(it => (
+        <button key={it.key} title={it.title} className={it.active ? "active" : ""} onClick={it.onClick}>{it.icon}</button>
+      ))}
+    </nav>
+  );
+}
+
+function HistoryPane({ threads, threadId, onOpen, onNew, filter, setFilter, filterOn, setFilterOn }) {
+  const groups = groupThreadsByMonth(threads.filter(t => !filter || (t.title || "").includes(filter)));
+  return (
+    <aside className="p-history">
+      <div className="p-hist-head">
+        <span className="t">历史记录</span>
+        <button title="过滤历史" onClick={() => { setFilterOn(o => !o); if (filterOn) setFilter(""); }}>⚙️</button>
+      </div>
+      <button className="p-new" onClick={onNew}>＋ 新建对话</button>
+      {filterOn && (
+        <div className="p-filter"><input placeholder="过滤对话标题" value={filter}
+          onChange={e => setFilter(e.target.value)} autoFocus /></div>
+      )}
+      <div className="p-hist-list">
+        {groups.length === 0 && <div className="empty" style={{ padding: "16px 10px" }}>暂无历史对话</div>}
+        {groups.map(g => (
+          <div key={g.key}>
+            <div className="p-month">{g.key}</div>
+            {g.items.map(t => (
+              <div key={t.id} className={`p-hist-item ${threadId === t.id ? "active" : ""}`}
+                   onClick={() => onOpen(t.id)} title={t.title || "未命名对话"}>
+                <div className="t">{t.title || "未命名对话"}</div>
+                <button className="more" title="更多操作" onClick={e => e.stopPropagation()}>···</button>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function formatBytes(bytes) {
+  const units = ["B", "KB", "MB", "GB"];
+  let value = Number(bytes) || 0;
+  let level = 0;
+  while (value >= 1024 && level < units.length - 1) { value /= 1024; level += 1; }
+  return `${value >= 10 || level === 0 ? Math.round(value) : value.toFixed(1)} ${units[level]}`;
+}
+
+function PortalComposer({ running, onSend, skills, selectedSkills, toggleSkill, webOn, setWebOn,
+                         projectId, attachments, onAttachmentsChange, notify }) {
+  const [draft, setDraft] = useState("");
+  const [popOpen, setPopOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const taRef = useRef(null);
+  const fileRef = useRef(null);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "30px";
+    ta.style.height = Math.min(ta.scrollHeight, 180) + "px";
+  }, [draft]);
+
+  useEffect(() => {
+    if (!popOpen) return;
+    function onPointerDown(event) {
+      if (rootRef.current && !rootRef.current.contains(event.target)) setPopOpen(false);
+    }
+    function onKeyDown(event) {
+      if (event.key === "Escape") setPopOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [popOpen]);
+
+  async function handleFiles(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    if (!projectId) { notify("请先选择项目", "err"); return; }
+    setPopOpen(false);
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const form = new FormData();
+        form.append("file", file);
+        const saved = await api(
+          `/industrial/files?project_id=${encodeURIComponent(projectId)}`,
+          { method: "POST", body: form },
+        );
+        const queued = await api(
+          `/industrial/files/${saved.id}/parse?project_id=${encodeURIComponent(projectId)}`,
+          { method: "POST" },
+        );
+        onAttachmentsChange(prev => [...prev, { ...saved, status: queued.status }]);
+      }
+      notify("文件已上传并进入解析队列", "ok");
+    } catch (err) {
+      notify(err.message, "err");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function send() {
+    const text = draft.trim();
+    if (!text || running) return;
+    setPopOpen(false);
+    onSend(text, attachments);
+    setDraft("");
+  }
+
+  return (
+    <div className="p-composer" ref={rootRef}>
+      {attachments.length > 0 && (
+        <div className="p-files">
+          {attachments.map(file => (
+            <div className="p-file" key={file.id}>
+              <span>📎</span>
+              <span className="name" title={file.filename}>{file.filename}</span>
+              <span className="meta">{formatBytes(file.size)} · {file.parser_skill}</span>
+              <span className={`state ${file.status === "uploaded" ? "uploaded" : ""}`}>
+                {file.status === "queued" ? "待解析" : file.status === "unsupported" ? "不支持" : "已上传"}
+              </span>
+              <button type="button" title="移除附件"
+                onClick={() => onAttachmentsChange(prev => prev.filter(item => item.id !== file.id))}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {selectedSkills.length > 0 && (
+        <div className="p-chips">
+          {selectedSkills.map(name => {
+            const sk = skills.find(s => s.name === name);
+            return (
+              <span key={name} className="p-chip">
+                {sk ? `${SKILL_ICONS[sk.icon] || "🧩"} ${sk.label}` : name}
+                <button onClick={() => toggleSkill(name)} title="移除">×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      <textarea ref={taRef} value={draft} onChange={e => setDraft(e.target.value)}
+        placeholder="输入您的问题，输入 / 选择技能或上传文件"
+        onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} />
+      {popOpen && (
+        <div className="p-skill-pop">
+          {skills.map(sk => {
+            const on = selectedSkills.includes(sk.name);
+            return (
+              <button key={sk.name}
+                className={`p-skill-item ${sk.connected ? "" : "off"}`}
+                onClick={() => { toggleSkill(sk.name); setPopOpen(false); }}>
+                <span className="ico">{SKILL_ICONS[sk.icon] || "🧩"}</span>
+                <span className="meta">
+                  <span className="lab">{sk.label}{sk.data_live === false && <i className="demo">演示数据</i>}</span>
+                  <span className="desc">{sk.description}</span>
+                </span>
+                <span className={`tag ${sk.connected ? "on" : ""}`}>{sk.connected ? (on ? "已选" : "已接通") : "未接通"}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <input ref={fileRef} type="file" hidden
+        accept=".txt,.md,.pdf,.docx,.xlsx,.csv,.png,.jpg,.jpeg,.dwg,.dxf"
+        onChange={handleFiles} />
+      <div className="p-composer-bar">
+        <button type="button" className="p-icon-btn" title="上传附件" disabled={uploading}
+          onClick={() => fileRef.current?.click()}>{uploading ? "上传中…" : "📎 附件"}</button>
+        <button type="button" className={`p-icon-btn ${webOn ? "on" : ""}`}
+          onClick={() => setWebOn(o => !o)}>🌐 联网搜索</button>
+        <button type="button" className={`p-icon-btn ${popOpen ? "on" : ""}`}
+          onClick={() => setPopOpen(o => !o)}>✂ skills 工具 ▾</button>
+        <button className="p-send" disabled={!draft.trim() || running || uploading} onClick={send} title="发送">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PortalChat({ threadId, pendingSend, onConsumePending, onSent, onRequestStart,
+                     skills, selectedSkills, toggleSkill, webOn, setWebOn, projectId, notify }) {
+  const [messages, setMessages] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [running, setRunning] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [showScroll, setShowScroll] = useState(false);
+  const [openDetail, setOpenDetail] = useState({});
+  const turnRef = useRef(0);
+  const abortRef = useRef(null);
+  const msgsRef = useRef(null);
+  const stickRef = useRef(true);
+  const loadDoneRef = useRef(false);   // set synchronously in the thread effect, so the pending
+                                       // effect in the same commit can't fire on a stale loading value
+  const sendSeqRef = useRef(0);        // bumped on every send(); lets an in-flight GET /messages
+                                       // skip overwriting messages that a send already appended
+
+  // Abort in-flight stream when switching threads / unmounting.
+  useEffect(() => {
+    if (!threadId) { setMessages([]); setLoading(false); setNotFound(false); return; }
+    abortRef.current?.abort();
+    loadDoneRef.current = false;
+    const seqAtLoad = sendSeqRef.current;
+    setLoading(true); setNotFound(false); setMessages([]); setOpenDetail({});
+    api(`/threads/${threadId}/messages`)
+      .then(rows => {
+        if (sendSeqRef.current !== seqAtLoad) return;  // a send began mid-load; don't clobber it
+        setMessages(rows.map(m => ({
+          role: m.role, content: m.content,
+          toolCards: m.role === "assistant" && m.tool_calls
+            ? m.tool_calls.map(tc => ({ key: tc.id || tc.name, name: tc.name, state: "ok" })) : [],
+        })));
+      })
+      .catch(e => { if (!(e instanceof AuthLost)) setNotFound(true); })
+      .finally(() => { loadDoneRef.current = true; setLoading(false); });
+    return () => { abortRef.current?.abort(); };
+  }, [threadId]);
+
+  useEffect(() => {
+    if (pendingSend && threadId && loadDoneRef.current) {
+      const text = pendingSend;
+      onConsumePending();
+      send(text);
+    }
+  }, [pendingSend, threadId, loading]);
+
+  useEffect(() => {
+    if (stickRef.current) msgsRef.current?.scrollTo({ top: msgsRef.current.scrollHeight });
+  }, [messages, running]);
+
+  useEffect(() => {
+    setAttachments([]);
+  }, [projectId]);
+
+  function onScroll() {
+    const el = msgsRef.current;
+    if (!el) return;
+    const near = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    stickRef.current = near;
+    setShowScroll(!near);
+  }
+
+  async function send(contentRaw, files = attachments) {
+    const raw = (contentRaw || "").trim();
+    if (!raw || running) return;
+    const prefixes = selectedSkills.map(s => `[技能：${(skills.find(k => k.name === s) || {}).label || s}]`);
+    if (webOn) prefixes.push("[联网搜索]");
+    files.forEach(file => {
+      prefixes.push(`[附件：${file.filename}｜${formatBytes(file.size)}｜解析 Skill：${file.parser_skill}｜状态：${file.status}]`);
+    });
+    const content = (prefixes.length ? prefixes.join("\n") + "\n" : "") + raw;
+    if (!threadId) {
+      setAttachments([]);
+      onRequestStart(content);
+      return;
+    }
+
+    const myTick = ++turnRef.current;
+    sendSeqRef.current++;
+    setRunning(true);
+    stickRef.current = true;
+    setMessages(ms => [...ms, { role: "user", content: raw, toolCards: [] }]);
+    setMessages(ms => [...ms, {
+      role: "assistant", content: "", toolCards: [], error: "", streaming: true,
+      tokens: null, thinking: "", pending: true,
+    }]);
+
+    const patchLast = (fn) => {
+      if (turnRef.current !== myTick) return;
+      setMessages(ms => ms.map((m, i) => i === ms.length - 1 ? fn(m) : m));
+    };
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const startedAt = performance.now();
+    setAttachments([]);
+
+    await runSSE(threadId, content, {
+      signal: ctrl.signal,
+      onToken: (t) => patchLast(m => ({ ...m, content: m.content + t, pending: false })),
+      onThinking: (t) => patchLast(m => ({ ...m, thinking: m.thinking + t, pending: t ? false : m.pending })),
+      onToolCall: (d) => patchLast(m => ({
+        ...m, toolCards: [...m.toolCards, { key: d.id || `${d.name}-${Date.now()}`, name: d.name, state: "run", args: d.args }],
+      })),
+      onToolResult: (d) => patchLast(m => ({
+        ...m,
+        toolCards: m.toolCards.map(c =>
+          (!c.state || c.state === "run") && (!d.id || c.key === d.id)
+            ? { ...c, state: "ok", detail: d.content } : c),
+      })),
+      onDone: (d) => {
+        patchLast(m => ({
+          ...m, content: d.content || m.content, streaming: false, tokens: d.tokens,
+          langfuseUrl: d.langfuse_url, elapsedMs: Math.round(performance.now() - startedAt), failed: false,
+        }));
+        setRunning(false);
+        onSent && onSent();
+      },
+      onError: (msg) => {
+        patchLast(m => ({
+          ...m, streaming: false, error: msg, failed: true,
+          elapsedMs: Math.round(performance.now() - startedAt),
+        }));
+        setRunning(false);
+        onSent && onSent();
+      },
+      onAbort: () => {
+        patchLast(m => ({ ...m, streaming: false, failed: !m.content, error: m.content ? m.error : "已取消" }));
+        setRunning(false);
+      },
+      onAuthLost: () => window.location.reload(),
+    });
+  }
+
+  const composer = (
+    <div className="p-composer-wrap">
+      <PortalComposer running={running} onSend={send} skills={skills}
+        selectedSkills={selectedSkills} toggleSkill={toggleSkill}
+        webOn={webOn} setWebOn={setWebOn} projectId={projectId}
+        attachments={attachments} onAttachmentsChange={setAttachments} notify={notify} />
+      <div className="p-disclaimer">内容由 AI 生成，仅供参考</div>
+    </div>
+  );
+
+  if (!threadId) {
+    return (
+      <div className="p-chat">
+        <div className="p-empty">
+          <div className="big">⚙️</div>
+          <div className="ttl">智脑 · 非标方案专家</div>
+          <div className="sub">选择一个场景，或直接在下方描述你的非标设计问题</div>
+          <div className="p-examples">
+            {PORTAL_EXAMPLES.map(([ico, ttl, desc]) => (
+              <button key={ttl} className="p-example" onClick={() => send(desc)}>
+                <b>{ico} {ttl}</b>{desc}
+              </button>
+            ))}
+          </div>
+        </div>
+        {composer}
+      </div>
+    );
+  }
+  if (loading) return <div className="p-chat"><div className="p-loading"><span className="spin" /> 加载中…</div></div>;
+  if (notFound) return <div className="p-chat"><div className="p-loading">对话不存在或无权访问</div></div>;
+
+  return (
+    <div className="p-chat">
+      <div className="p-msgs" ref={msgsRef} onScroll={onScroll}>
+        {messages.length === 0 && <div className="p-loading">开始你的第一条消息</div>}
+        {messages.map((m, i) => m.role === "user" ? (
+          <div key={i} className="p-row user">
+            <div className="p-bubble-u">{stripPrefixLines(m.content)}</div>
+          </div>
+        ) : (
+          <div key={i} className="p-row">
+            <div className="p-ai">
+              {(m.pending || m.thinking) && <ThinkingBlock text={m.thinking} active={m.streaming && !m.content} />}
+              {m.toolCards && m.toolCards.length > 0 && (
+                <div className="p-tools">
+                  {m.toolCards.map(tc => (
+                    <div key={tc.key} className="tool-chip">
+                      <span>🔧 {TOOL_LABELS[tc.name] || tc.name}</span>
+                      <span className={`state ${tc.state}`}>
+                        {tc.state === "run" ? "执行中" : tc.state === "err" ? "失败" : "完成"}
+                      </span>
+                      {tc.detail && <pre>{tc.detail}</pre>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {m.content ? <Markdown text={m.content} /> : (m.streaming ? "" : null)}
+              {m.streaming && <span className="cursor" />}
+              {m.error && <div className="msg-err">⚠ {m.error}</div>}
+              {!m.streaming && m.elapsedMs != null && (
+                <>
+                  <div className={`p-status ${m.failed ? "err" : ""}`}
+                       onClick={() => setOpenDetail(o => ({ ...o, [i]: !o[i] }))}>
+                    {m.failed ? "执行失败" : `已完成 ${Math.max(1, Math.round(m.elapsedMs / 1000))} 秒`} <span>⌄</span>
+                  </div>
+                  {openDetail[i] && (
+                    <div className="p-status-detail">
+                      {m.tokens ? `tokens ${m.tokens.total_tokens}（输入 ${m.tokens.input_tokens} / 输出 ${m.tokens.output_tokens}）` : "无 token 统计"}
+                      {m.langfuseUrl && <> · <a href={m.langfuseUrl} target="_blank" rel="noreferrer">Langfuse ↗</a></>}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {showScroll && (
+        <button className="p-scroll-btn" onClick={() => {
+          stickRef.current = true; setShowScroll(false);
+          msgsRef.current?.scrollTo({ top: msgsRef.current.scrollHeight, behavior: "smooth" });
+        }}>↓</button>
+      )}
+      {composer}
+    </div>
+  );
+}
+
+function SkillsModal({ skills, selectedSkills, toggleSkill, onClose }) {
+  return (
+    <div className="modal-mask" onMouseDown={onClose}>
+      <div className="p-modal-card" onMouseDown={e => e.stopPropagation()}>
+        <h3>skills 工具库</h3>
+        <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginBottom: 12 }}>
+          所有技能已封装为智能体可调用的 skill：发送匹配问题时智能体会自动读取技能指令执行；显式勾选则随消息注入技能前缀。标注「演示数据」的技能数据源为演示样例，正式数据需对接客户系统。
+        </div>
+        {skills.map(sk => (
+          <button key={sk.name} className="p-skill-item" style={{ width: "100%" }}
+            onClick={() => toggleSkill(sk.name)}>
+            <span className="ico">{SKILL_ICONS[sk.icon] || "🧩"}</span>
+            <span className="meta">
+              <span className="lab">{sk.label}{sk.data_live === false && <i className="demo">演示数据</i>}</span>
+              <span className="desc">{sk.description}</span>
+            </span>
+            <span className={`tag ${sk.connected ? "on" : ""}`}>
+              {selectedSkills.includes(sk.name) ? "✓ 已选" : sk.connected ? "已接通" : "未接通"}
+            </span>
+          </button>
+        ))}
+        <div className="modal-foot">
+          <button className="btn btn-primary" onClick={onClose}>完成</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KnowledgeModal({ onClose }) {
+  const [q, setQ] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  function search(term) {
+    setLoading(true);
+    api(`/industrial/knowledge?q=${encodeURIComponent(term)}&limit=50`)
+      .then(d => setItems(d.items || []))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }
+  useEffect(() => { search(""); }, []);
+
+  return (
+    <div className="modal-mask" onMouseDown={onClose}>
+      <div className="p-modal-card" onMouseDown={e => e.stopPropagation()}>
+        <h3>工业大脑 · 知识库检索</h3>
+        <form onSubmit={e => { e.preventDefault(); search(q); }} style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          <input style={{ flex: 1, border: "1px solid var(--line)", borderRadius: 9, padding: "8px 11px" }}
+            placeholder="关键词，如：井道 中分门 对重 ESW" value={q}
+            onChange={e => setQ(e.target.value)} />
+          <button className="btn btn-primary btn-sm">检索</button>
+        </form>
+        {loading ? <div className="empty">加载中…</div>
+          : items.length === 0 ? <div className="empty">未检索到适用条款</div>
+          : items.map(it => (
+            <div key={it.id} className="p-know-item">
+              <div className="meta">
+                <span className="badge role-admin">{it.family}</span>
+                <span>{it.category}</span>
+              </div>
+              <div className="ttl">{it.title}</div>
+              <div className="body">{it.content}</div>
+            </div>
+          ))}
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>关闭</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PortalShell({ session, agents, projects, reloadProjects, notify, onEnterAdmin, onLogout }) {
+  const [threadId, setThreadId] = useState(null);
+  const [threads, setThreads] = useState([]);
+  const [projectId, setProjectId] = useState(null);
+  const [pendingSend, setPendingSend] = useState("");
+  const [skills, setSkills] = useState([]);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [webOn, setWebOn] = useState(false);
+  const [showKnowledge, setShowKnowledge] = useState(false);
+  const [showSkills, setShowSkills] = useState(false);
+  const [filterOn, setFilterOn] = useState(false);
+  const [filter, setFilter] = useState("");
+  const [tick, setTick] = useState(0);
+  const ensuredRef = useRef(false);
+  const fallbackWarnedRef = useRef(false);
+
+  useEffect(() => {
+    api("/industrial/skills").then(d => setSkills(d.items || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (ensuredRef.current || projects.length === 0) return;
+    ensuredRef.current = true;
+    setProjectId(projects[0].id);
+  }, [projects]);
+
+  useEffect(() => {
+    if (!projectId) { setThreads([]); return; }
+    api(`/threads?project_id=${encodeURIComponent(projectId)}`)
+      .then(setThreads).catch(() => {});
+  }, [projectId, tick]);
+
+  const toggleSkill = useCallback((name) => {
+    setSelectedSkills(prev => prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name]);
+  }, []);
+
+  async function startConversation(question = "") {
+    const preferred = agents.find(a => a.name === PORTAL_AGENT_NAME);
+    if (!agents.length) { notify("智能体尚未就绪，请联系管理员", "err"); return; }
+    if (!preferred && !fallbackWarnedRef.current) {
+      fallbackWarnedRef.current = true;
+      notify("未找到「智脑 · 非标方案专家」，已为你选择第一个可用智能体", "err");
+    }
+    const agent = preferred || agents[0];
+    const pid = projectId || projects[0]?.id || "";
+    try {
+      const t = await api("/threads", { method: "POST", body: { agent_id: agent.id, project_id: pid } });
+      setProjectId(t.project_id);
+      setThreadId(t.id);
+      if (question) setPendingSend(question);
+      reloadProjects();
+      setTick(x => x + 1);
+    } catch (e) { notify(e.message, "err"); }
+  }
+
+  function refreshHistory() { setTick(x => x + 1); reloadProjects(); }
+
+  return (
+    <>
+      <div className="shell" style={{ flexDirection: "column" }}>
+        <PortalTopBar session={session} onEnterAdmin={onEnterAdmin} onLogout={onLogout} />
+        <div className="p-body">
+          <IconRail rail="history"
+            onHistory={() => { setShowKnowledge(false); setShowSkills(false); }}
+            onSearch={() => { setShowSkills(false); setShowKnowledge(true); }}
+            onSkills={() => { setShowKnowledge(false); setShowSkills(true); }}
+            onSettings={onEnterAdmin}
+            searchOn={showKnowledge} skillsOn={showSkills} />
+          <HistoryPane threads={threads} threadId={threadId}
+            onOpen={id => setThreadId(id)} onNew={() => setThreadId(null)}
+            filter={filter} setFilter={setFilter}
+            filterOn={filterOn} setFilterOn={setFilterOn} />
+          <PortalChat threadId={threadId} pendingSend={pendingSend}
+            onConsumePending={() => setPendingSend("")}
+            onSent={refreshHistory}
+            onRequestStart={(text) => startConversation(text)}
+            skills={skills} selectedSkills={selectedSkills} toggleSkill={toggleSkill}
+            webOn={webOn} setWebOn={setWebOn} projectId={projectId} notify={notify} />
+        </div>
+      </div>
+      {showKnowledge && <KnowledgeModal onClose={() => setShowKnowledge(false)} />}
+      {showSkills && <SkillsModal skills={skills} selectedSkills={selectedSkills}
+        toggleSkill={toggleSkill} onClose={() => setShowSkills(false)} />}
+    </>
+  );
+}
+
+/* ============================== app shell ============================== */
+
+function App() {
+  const [session, setSession] = useState(loadSession());
+  const [view, setView] = useState("home");
+  const [threadId, setThreadId] = useState(null);
+  const [pendingSend, setPendingSend] = useState("");
+  const [agents, setAgents] = useState([]);
+  const [catalog, setCatalog] = useState(null);
+  const [tick, setTick] = useState(0);
+  const [toasts, setToast] = useState([]);
+  const [traceJump, setTraceJump] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState(null);
+  const [projThreads, setProjThreads] = useState([]);
+  const [agentId, setAgentId] = useState("");
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [mode, setMode] = useState(() => localStorage.getItem("dap:mode") === "admin" ? "admin" : "portal");
+
+  useEffect(() => {
+    document.body.classList.toggle("portal", mode !== "admin");
+    localStorage.setItem("dap:mode", mode);
+  }, [mode]);
+
+  const notify = useCallback((text, kind="") => {
+    const id = Date.now() + Math.random();
+    setToast(t => [...t, { id, text, kind }]);
+    setTimeout(() => setToast(t => t.filter(x => x.id !== id)), 3200);
+  }, []);
+
+  const reloadAgents = useCallback(() => {
+    api("/agents").then(rows => {
+      setAgents(rows);
+      setAgentId(prev => prev || (rows[0] ? rows[0].id : ""));
+    }).catch(e => { if (e instanceof AuthLost) handleAuthLost(); });
+  }, []);
+
+  const loadProjects = useCallback(() => {
+    api("/projects").then(setProjects).catch(()=>{});
+  }, []);
+
+  function handleAuthLost() {
+    saveSession(null);
+    setSession(null);
+  }
+
+  useEffect(() => {
+    if (!session) return;
+    reloadAgents();
+    loadProjects();
+    api("/tools").then(setCatalog).catch(()=>{});
+  }, [session]);
+
+  // Load conversations of the active project whenever it changes
+  useEffect(() => {
+    if (!projectId) { setProjThreads([]); return; }
+    api(`/threads?project_id=${encodeURIComponent(projectId)}`)
+      .then(setProjThreads).catch(()=>{});
+  }, [projectId, view, tick]);
+
+  // Global error boundary-ish listener: 401 from SSE
+  useEffect(() => {
+    function onAuth() { handleAuthLost(); }
+    window.addEventListener("dap:unauth", onAuth);
+    function onGotoEval() { setView("eval"); }
+    window.addEventListener("dap:goto-eval", onGotoEval);
+    return () => {
+      window.removeEventListener("dap:unauth", onAuth);
+      window.removeEventListener("dap:goto-eval", onGotoEval);
+    };
+  }, []);
+
+  function onAuthed(s) {
+    saveSession(s);
+    setSession(s);
+    setView("home");
+  }
+  function logout() {
+    if (!confirm("退出登录？")) return;
+    saveSession(null); setSession(null);
+  }
+  function openProject(id) {
+    setProjectId(id);
+    setThreadId(null);
+    setView("project");
+  }
+  function openThread(id) {
+    setThreadId(id);
+    setView("chat");
+  }
+  async function createConversation(pid = "") {
+    const useAgent = agentId || (agents[0] && agents[0].id);
+    if (!useAgent) { notify("请先创建一个智能体", "err"); setView("agents"); return; }
+    const targetPid = pid || projectId || (projects[0] && projects[0].id) || "";
+    try {
+      const t = await api("/threads", { method:"POST", body:{ agent_id: useAgent, project_id: targetPid } });
+      setProjectId(t.project_id);
+      setThreadId(t.id);
+      setPendingSend("");
+      setView("chat");
+      loadProjects();
+      setTick(x => x + 1);
+    } catch (e) { notify(e.message, "err"); }
+  }
+  async function startChat(aid, content, pid = "") {
+    try {
+      const t = await api("/threads", { method:"POST", body:{ agent_id: aid, project_id: pid } });
+      setProjectId(t.project_id);
+      setThreadId(t.id);
+      setPendingSend(content);
+      setView("chat");
+      loadProjects();
+    } catch (e) { notify(e.message, "err"); }
+  }
+  function openTraceFromEval(tid) {
+    setTraceJump(tid);
+    setView("traces");
+  }
+
+  if (!session) return <AuthPage onAuthed={onAuthed} />;
+
+  const titles = { home:"首页", project:"项目", chat:"对话", agents:"智能体", eval:"评测", traces:"运行追踪", settings:"设置" };
+  const activeProject = projects.find(p => p.id === projectId) || null;
+  const inProject = (view === "project" || view === "chat") && activeProject;
+
+  if (mode === "portal") {
+    return (
+      <>
+        <PortalShell session={session} agents={agents} projects={projects}
+          reloadProjects={loadProjects} notify={notify}
+          onEnterAdmin={() => setMode("admin")} onLogout={logout} />
+        <div className="toast-wrap">
+          {toasts.map(t => <div key={t.id} className={`toast ${t.kind}`}>{t.text}</div>)}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="shell">
+      <Sidebar session={session} view={view} setView={setView}
+        projects={projects} projectId={projectId}
+        onOpenProject={openProject}
+        onNewProject={()=>setShowProjectModal(true)}
+        onBackToPortal={() => setMode("portal")}
+        onLogout={logout} />
+      {inProject ? (
+        <main className="main">
+          <div className="proj-layout">
+            <ConversationColumn project={activeProject} threads={projThreads}
+              threadId={threadId} onOpenThread={openThread}
+              onNewConversation={()=>createConversation()} />
+            <div className="proj-content">
+              {view === "chat" && threadId ? (
+                <ChatView threadId={threadId} agents={agents}
+                  pendingSend={pendingSend} onConsumePending={()=>setPendingSend("")}
+                  registerRefresh={()=>{ setTick(t=>t+1); loadProjects(); }} />
+              ) : (
+                <div className="proj-empty">
+                  <div className="ico">💬</div>
+                  <div className="t">在「{activeProject.name}」中开始一段新对话</div>
+                  <div className="s">对话中生成和上传的文件都会保存在该项目目录下</div>
+                  <button className="btn btn-primary" onClick={()=>createConversation()}>＋ 新建对话</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      ) : (
+        <main className="main">
+          <div className="topbar">
+            <h2>{titles[view]}</h2>
+          </div>
+          <div className="content">
+            {view === "home" && <HomeView agents={agents} projects={projects}
+              onPickAgent={setAgentId} onStartChat={startChat} />}
+            {view === "agents" && <AgentsView session={session} agents={agents}
+              reloadAgents={reloadAgents} catalog={catalog} notify={notify} />}
+            {view === "eval" && <EvalView agents={agents} notify={notify} onOpenTrace={openTraceFromEval} />}
+            {view === "traces" && <TracesView initialTraceId={traceJump} consumeInitial={()=>setTraceJump(null)} />}
+            {view === "settings" && <SettingsView session={session} setSession={setSession}
+              notify={notify} onLogout={logout} />}
+          </div>
+        </main>
+      )}
+      {showProjectModal && <ProjectModal notify={notify}
+        onClose={()=>setShowProjectModal(false)}
+        onCreated={p => { loadProjects(); openProject(p.id); }} />}
+      <div className="toast-wrap">
+        {toasts.map(t => <div key={t.id} className={`toast ${t.kind}`}>{t.text}</div>)}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
