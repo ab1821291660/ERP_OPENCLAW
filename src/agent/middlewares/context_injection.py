@@ -35,9 +35,7 @@ class ContextInjectionMiddleware(AgentMiddleware):
     def before_agent(self, state: Dict[str, Any], runtime: Any) -> Optional[Dict[str, Any]]:
         """
         同步版本：注入用户上下文 SystemMessage。
-
         从 runtime.context 提取 user_id / username，构建一条包含用户身份信息和偏好文件路径的 SystemMessage，追加到消息列表的开头
-
         Args：
             state : Agent 当前状态
             runtime : 运行时上下文，包含 context (ProcurementContext)对象
@@ -57,10 +55,10 @@ class ContextInjectionMiddleware(AgentMiddleware):
             logger.warning("ContextInjectionMiddleware: runtime.context 为 None，跳过上下文注入")
             return None
         user_id = ctx.get("user_id") if isinstance(ctx, dict) else getattr(ctx, "user_id", None)
-        if not user_id:
+        if not user_id:##===================================？？
             logger.warning("ContextInjectionMiddleware: runtime.context 中没有 user_id，跳过上下文注入")
             return None
-        username = (
+        username = (##===================================？？
             ctx.get("username") if isinstance(ctx, dict) else getattr(ctx, "username", None)
         ) or user_id
         logger.info(f"ContextInjectionMiddleware: 注入用户上下文 user_id={user_id}, username={username}")
@@ -69,7 +67,7 @@ class ContextInjectionMiddleware(AgentMiddleware):
             f"【系统上下文】\n"
             f"当前用户 user_id: {user_id}\n"
             f"当前用户 username: {username}\n"
-            f"用户偏好文件路径: /memories/{user_id}/preferences.md\n"  ##沙箱中的##===================================##===================================
+            f"用户偏好文件路径: /memories/{user_id}/preferences.md\n"  ##是为store本地kv--虚拟目录##===================================##===================================
             f"\n请首先使用 read_file 读取上述偏好文件了解用户偏好。"
             f"\n（recent_suppliers 和 recent_queries 由系统自动维护，你无需手动更新）"
         )

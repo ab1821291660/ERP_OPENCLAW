@@ -67,6 +67,24 @@ FALLBACK_MODEL = init_chat_model(
 )
 
 
+
+
+# =============================================================================
+# ★ 3. 路径常量 —— 项目路径、沙箱路径、本地路径
+EXAMPLE_DIR = Path(__file__).parent.parent
+# ★ 本地的Agent记忆文件
+LOCAL_AGENTS_MD = EXAMPLE_DIR / "agent/memory/AGENTS.md"##===================================
+# ★ 本地预制技能资源目录（项目内的路径，相对于项目根）
+LOCAL_SKILLS_DIR = EXAMPLE_DIR / "skills"##===================================
+# ★ 本地子 Agent 配置目录
+LOCAL_SUBAGENT_CONFIG_DIR = EXAMPLE_DIR / "agent/subagents"##===================================
+##
+# ★ 本地下载目录（从沙箱下载文件的目标路径）
+DOWNLOAD_DIR = EXAMPLE_DIR / "download"##===================================
+
+
+
+
 # =============================================================================
 # ★ 2. 沙箱配置 —— OpenSandbox 连接配置
 SANDBOX_CONFIG = ConnectionConfigSync(
@@ -76,33 +94,17 @@ SANDBOX_CONFIG = ConnectionConfigSync(
     request_timeout=timedelta(seconds=60),
     transport=httpx.HTTPTransport(limits=httpx.Limits(max_connections=20)),
 )
-
-
-# =============================================================================
-# ★ 3. 路径常量 —— 项目路径、沙箱路径、本地路径
-EXAMPLE_DIR = Path(__file__).parent.parent
-# ★ 本地的Agent记忆文件
-LOCAL_AGENTS_MD = EXAMPLE_DIR / "agent/memory/AGENTS.md"
-# ★ 本地技能资源目录（项目内的路径，相对于项目根）
-LOCAL_SKILLS_DIR = EXAMPLE_DIR / "skills"
-# ★ 本地子 Agent 配置目录
-LOCAL_SUBAGENT_CONFIG_DIR = EXAMPLE_DIR / "agent/subagents"
-##
-# ★ 本地下载目录（从沙箱下载文件的目标路径）
-DOWNLOAD_DIR = EXAMPLE_DIR / "download"
-
-
-# =============================================================================
 # ★ 沙箱内记忆根路径（用户私有记忆存放处）
-SANDBOX_MEMORIES_ROOT = "/memories"
+SANDBOX_MEMORIES_ROOT = "/memories"##是为本地的kv--虚拟的沙箱##===================================
+# ★ 用户偏好文件名（在 /memories/{user_id}/ 下）##===================================
+USER_PREFERENCES_FILENAME = "preferences.md"##===================================
+
 # ★ 沙箱内技能根路径
 SANDBOX_SKILLS_ROOT = "/skills"
 
 # ★ 4. 文件名常量 —— 沙箱内文件名、用户偏好文件名
-# ★ 主 Agent 只读指引文件（上传到沙箱 /AGENTS.md）##===================================
+# ★ 主 Agent 只读指引文件（上传到沙箱AGENTS.md）##===================================
 AGENTS_MD_FILENAME = "/AGENTS.md"##===================================
-# ★ 用户偏好文件名（在 /memories/{user_id}/ 下）##===================================
-USER_PREFERENCES_FILENAME = "preferences.md"##===================================
 ##
 # ★ 沙箱内分析中间文件存放目录
 SANDBOX_ANALYSIS_ROOT = "/analysis"
