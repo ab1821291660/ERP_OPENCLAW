@@ -75,7 +75,7 @@ EXAMPLE_DIR = Path(__file__).parent.parent
 # ★ 本地的Agent记忆文件
 LOCAL_AGENTS_MD = EXAMPLE_DIR / "agent/memory/AGENTS.md"##===================================
 # ★ 本地预制技能资源目录（项目内的路径，相对于项目根）
-LOCAL_SKILLS_DIR = EXAMPLE_DIR / "skills"##===================================
+LOCAL_SKILLS_DIR = EXAMPLE_DIR / "skills"##===================================##===================================
 # ★ 本地子 Agent 配置目录
 LOCAL_SUBAGENT_CONFIG_DIR = EXAMPLE_DIR / "agent/subagents"##===================================
 ##
@@ -99,8 +99,6 @@ SANDBOX_MEMORIES_ROOT = "/memories"##是为本地的kv--虚拟的沙箱##=======
 # ★ 用户偏好文件名（在 /memories/{user_id}/ 下）##===================================
 USER_PREFERENCES_FILENAME = "preferences.md"##===================================
 
-# ★ 沙箱内技能根路径
-SANDBOX_SKILLS_ROOT = "/skills"
 
 # ★ 4. 文件名常量 —— 沙箱内文件名、用户偏好文件名
 # ★ 主 Agent 只读指引文件（上传到沙箱AGENTS.md）##===================================
@@ -112,6 +110,8 @@ SANDBOX_ANALYSIS_ROOT = "/analysis"
 SANDBOX_DATA_ROOT = "/data"
 
 
+# ★ 沙箱内技能根路径
+SANDBOX_SKILLS_ROOT = "/skills" ##===================================##===================================
 # ★ 5. 沙箱--技能路径映射、子Agent名称映射
 # ★ 技能 StoreBackend 命名空间（按 Agent scope 组织，无用户隔离）
 SKILLS_STORE_NAMESPACE = ("skills",)
@@ -128,10 +128,11 @@ PERSISTED_SKILLS_ROOT = "/persisted-skills" ##==================================
 
 
 
+
+
 # =============================================================================
 # ★ 6. MongoDB 配置 —— 用于持久化 Agent短期记忆/checkpoint
 # ★ 7. 持久化存储 —— InMemoryStore（开发）+ MongoDBSaver（生产）
-# =============================================================================
 # ★ InMemoryStore: 开发阶段使用。生产环境替换为持久 Store。
 STORE = InMemoryStore()##持久化到 本地StoreBackend （读取沙箱中的/skills/main下的技能目录 →→ 到本地store.aput=/main或者procurement或者order/web-fetcher/SKILL.md）##===================================
 
