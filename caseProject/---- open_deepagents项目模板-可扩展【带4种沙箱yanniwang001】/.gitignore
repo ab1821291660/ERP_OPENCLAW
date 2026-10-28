@@ -1,0 +1,14 @@
+.omx/
+.DS_Store
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.uv-cache/
+
+# Local/generated documentation drafts should not become project docs.
+docs/repo-cleanup-plan.md
+docs/repository-architecture.md
