@@ -14,11 +14,8 @@ from mcp_server.server_config import JAVA_API_BASE_URL
 
 # 关键点：lifespan 返回的字典会通过 ctx.request_context.lifespan_context 传递给每个工具函数，
 # 避免了全局变量或手动关闭的麻烦。
-
 # =============================================================================
 # ★ 1. mcp_lifespan —— FastMCP 生命周期管理
-# =============================================================================
-
 @asynccontextmanager
 async def mcp_lifespan(server: FastMCP):
     """
@@ -29,7 +26,7 @@ async def mcp_lifespan(server: FastMCP):
       """
 
     # 启动时创建 HTTP 客户端（连接池）
-    http_client = httpx.AsyncClient(
+    http_client = httpx.AsyncClient(##===================================
         base_url=JAVA_API_BASE_URL,##===================================
         timeout=30.0,
         limits=httpx.Limits(max_keepalive_connections=20,max_connections=100)
@@ -40,4 +37,4 @@ async def mcp_lifespan(server: FastMCP):
     yield {"http_client": http_client}
 
     # 关闭时释放 HTTP 客户端
-    await http_client.aclose()
+    await http_client.aclose()##===================================

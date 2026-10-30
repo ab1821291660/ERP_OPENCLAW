@@ -6,8 +6,8 @@ MCP Server 主入口
 """
 from fastmcp import FastMCP
 from mcp_server.http_base import mcp_lifespan##===================================
+from mcp_server.server_config import MCP_HOST, MCP_PORT, MCP_PATH##===================================
 
-from mcp_server.server_config import MCP_HOST, MCP_PORT, MCP_PATH
 
 from mcp_server.tools.inventory_tools import register_inventory_tools
 from mcp_server.tools.order_tools import register_order_tools
@@ -39,9 +39,9 @@ def main():
     # 启动 Streamable HTTP 服务
     mcp.run(
         transport="streamable-http",
-        host=MCP_HOST,
-        port=MCP_PORT,
-        path=MCP_PATH
+        host=MCP_HOST,##===================================
+        port=MCP_PORT,##===================================
+        path=MCP_PATH##===================================
     )
     # 注意：run() 会阻塞，且 lifespan 会在服务器关闭时自动清理资源
 if __name__ == '__main__':
