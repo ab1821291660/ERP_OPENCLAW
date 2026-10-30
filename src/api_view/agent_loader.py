@@ -117,6 +117,8 @@ class AgentLoader:
         self._agent = None
 
     # =====================================================================
+    def ________主主____单例agent__AICoding为多例__58为单例(self):
+        pass
     # ★ 2.3 Agent 实例管理
     # 获取最近的 Agent 实例
     @property
@@ -180,6 +182,10 @@ class AgentLoader:
         """
         # 1. 获取 / 创建用户沙箱
         sandbox_backend = await sandbox_manager.ensure_sandbox_for_user(user_id)##===================================
+        ##
+        ##
+        ##
+        ##
         # 2. 创建配置
         config = self.create_config(user_id=user_id)
         config["configurable"]["user_id"] = user_id

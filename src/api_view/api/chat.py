@@ -588,7 +588,6 @@ async def stream_chat_response(
 async def chat_stream(request: ChatRequest):
     """
     流式对话接口
-
     接收用户消息，返回 SSE 流式响应
     支持实时显示 AI 生成的内容和工具调用信息
     检测到 Human-in-the-Loop 中断时会发送 interrupt 事件
@@ -597,7 +596,7 @@ async def chat_stream(request: ChatRequest):
     user_id = request.user_id
 
     return StreamingResponse(
-        stream_chat_response(message=request.message, thread_id=thread_id, user_id=user_id),
+        stream_chat_response(message=request.message, thread_id=thread_id, user_id=user_id),##===================================##===================================
         media_type="text/event-stream",  # text/json, text/html, image/jpg
         headers={
             "Cache-Control": "no-cache",

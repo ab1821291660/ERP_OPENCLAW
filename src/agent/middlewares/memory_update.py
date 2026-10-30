@@ -319,8 +319,12 @@ class MemoryUpdateMiddleware(AgentMiddleware):
                     current_lines = value.split("\n")
 
 
+
+
             # 合并新旧偏好数据
             updated_content = _merge_preferences(current_lines, suppliers, query)##===================================
+
+
 
 
             # ── 步骤 8：写回 StoreBackend ──

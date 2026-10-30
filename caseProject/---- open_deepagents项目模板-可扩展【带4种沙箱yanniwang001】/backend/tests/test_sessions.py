@@ -1,0 +1,366 @@
+from fastapi.testclient import TestClient
+
+from app.core.config import Settings
+from app.db.models import SessionRecord, UploadRecord
+from app.main import create_app
+
+
+def _login_headers(client: TestClient, username: str, password: str) -> dict[str, str]:
+    response = client.post("/api/admin/login", json={"username": username, "password": password})
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+def test_session_message_and_upload_crud(client: TestClient, auth_headers: dict[str, str]) -> None:
+    create_session = client.post("/api/sessions", headers=auth_headers, json={"title": "Demo"})
+    assert create_session.status_code == 201
+    session_id = create_session.json()["id"]
+
+    with client.app.state.database.session_factory() as db:
+        created_session = db.query(SessionRecord).filter(SessionRecord.id == session_id).first()
+        assert created_session is not None
+        assert created_session.owner_username == "admin"
+
+    list_sessions = client.get("/api/sessions", headers=auth_headers)
+    assert list_sessions.status_code == 200
+    assert len(list_sessions.json()) == 1
+
+    create_message = client.post(
+        f"/api/sessions/{session_id}/messages",
+        headers=auth_headers,
+        json={"role": "user", "content": "hello backend", "run_id": "run-1"},
+    )
+    assert create_message.status_code == 201
+    message_id = create_message.json()["id"]
+
+    list_messages = client.get(f"/api/sessions/{session_id}/messages", headers=auth_headers)
+    assert list_messages.status_code == 200
+    assert list_messages.json()[0]["content"] == "hello backend"
+
+    upload_response = client.post(
+        f"/api/sessions/{session_id}/uploads",
+        headers=auth_headers,
+        data={"message_id": message_id},
+        files={"file": ("note.txt", b"backend attachment", "text/plain")},
+    )
+    assert upload_response.status_code == 201
+    upload_payload = upload_response.json()
+
+    session_detail = client.get(f"/api/sessions/{session_id}", headers=auth_headers)
+    assert session_detail.status_code == 200
+    session_payload = session_detail.json()
+    assert session_payload["last_run_id"] == "run-1"
+    assert len(session_payload["messages"]) == 1
+    assert len(session_payload["uploads"]) == 1
+
+    upload_content = client.get(
+        f"/api/uploads/{upload_payload['id']}/content",
+        headers=auth_headers,
+    )
+    assert upload_content.status_code == 200
+    assert upload_content.content == b"backend attachment"
+
+    update_message = client.patch(
+        f"/api/messages/{message_id}",
+        headers=auth_headers,
+        json={"content": "updated backend"},
+    )
+    assert update_message.status_code == 200
+    assert update_message.json()["content"] == "updated backend"
+
+    update_session = client.patch(
+        f"/api/sessions/{session_id}",
+        headers=auth_headers,
+        json={"title": "Renamed"},
+    )
+    assert update_session.status_code == 200
+    assert update_session.json()["title"] == "Renamed"
+
+    delete_message = client.delete(f"/api/messages/{message_id}", headers=auth_headers)
+    assert delete_message.status_code == 204
+
+    delete_session = client.delete(f"/api/sessions/{session_id}", headers=auth_headers)
+    assert delete_session.status_code == 204
+
+    final_sessions = client.get("/api/sessions", headers=auth_headers)
+    assert final_sessions.status_code == 200
+    assert final_sessions.json() == []
+
+
+def test_list_sessions_backfills_placeholder_title_from_first_user_message(
+    client: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
+    create_session = client.post("/api/sessions", headers=auth_headers, json={})
+    assert create_session.status_code == 201
+    session_id = create_session.json()["id"]
+
+    create_message = client.post(
+        f"/api/sessions/{session_id}/messages",
+        headers=auth_headers,
+        json={
+            "role": "user",
+            "content": "整理本周发布前需要确认的接口回归项\n第二行不应进入标题",
+        },
+    )
+    assert create_message.status_code == 201
+
+    list_sessions = client.get("/api/sessions", headers=auth_headers)
+    assert list_sessions.status_code == 200
+    assert list_sessions.json()[0]["title"] == "整理本周发布前需要确认的接口回归项"
+
+    session_detail = client.get(f"/api/sessions/{session_id}", headers=auth_headers)
+    assert session_detail.status_code == 200
+    assert session_detail.json()["title"] == "整理本周发布前需要确认的接口回归项"
+
+
+def test_upload_hook_can_enrich_upload_metadata(tmp_path) -> None:
+    hook_module = tmp_path / "upload_hooks.py"
+    hook_module.write_text(
+        "\n".join(
+            [
+                "def enrich(context):",
+                "    return {",
+                "        'hooked': True,",
+                "        'payload_size': len(context.payload),",
+                "        'upload_path': context.upload_path,",
+                "    }",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    settings = Settings(
+        database_url=f"sqlite+pysqlite:///{tmp_path / 'upload-hook.db'}",
+        admin_email="admin@example.com",
+        admin_username="admin",
+        admin_password="secret",
+        admin_token_secret="test-secret-key-with-32-bytes-minimum",
+        upload_storage_dir=tmp_path / "uploads",
+        deepagents_upload_hook_specs=f"{hook_module}:enrich",
+    )
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        login = client.post("/api/admin/login", json={"username": "admin", "password": "secret"})
+        token = login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        create_session = client.post("/api/sessions", headers=headers, json={"title": "Demo"})
+        session_id = create_session.json()["id"]
+
+        upload_response = client.post(
+            f"/api/sessions/{session_id}/uploads",
+            headers=headers,
+            files={"file": ("note.txt", b"backend attachment", "text/plain")},
+        )
+
+    assert upload_response.status_code == 201
+    extra = upload_response.json()["extra"]
+    assert extra["hooked"] is True
+    assert extra["payload_size"] == len(b"backend attachment")
+    assert extra["upload_path"].endswith(upload_response.json()["storage_key"])
+
+
+def test_upload_storage_key_is_short_and_does_not_include_session_id(
+    client: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
+    create_session = client.post(
+        "/api/sessions",
+        headers=auth_headers,
+        json={"title": "Short upload path"},
+    )
+    session_id = create_session.json()["id"]
+
+    upload_response = client.post(
+        f"/api/sessions/{session_id}/uploads",
+        headers=auth_headers,
+        files={"file": ("very long report name.txt", b"backend attachment", "text/plain")},
+    )
+
+    assert upload_response.status_code == 201
+    storage_key = upload_response.json()["storage_key"]
+    assert session_id not in storage_key
+    assert storage_key.count("/") == 1
+    folder, filename = storage_key.split("/", 1)
+    assert len(folder) <= 8
+    assert filename.endswith("-very-long-report-name.txt")
+
+
+def test_unsent_upload_can_be_deleted_and_cleans_record_and_file(
+    client: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
+    create_session = client.post(
+        "/api/sessions",
+        headers=auth_headers,
+        json={"title": "Pending upload"},
+    )
+    session_id = create_session.json()["id"]
+
+    upload_response = client.post(
+        f"/api/sessions/{session_id}/uploads",
+        headers=auth_headers,
+        files={"file": ("draft.txt", b"delete me", "text/plain")},
+    )
+    assert upload_response.status_code == 201
+    upload_payload = upload_response.json()
+    upload_id = upload_payload["id"]
+    upload_path = client.app.state.settings.upload_storage_dir / upload_payload["storage_key"]
+    assert upload_path.exists()
+
+    delete_response = client.delete(f"/api/uploads/{upload_id}", headers=auth_headers)
+    assert delete_response.status_code == 204
+
+    get_upload = client.get(f"/api/uploads/{upload_id}", headers=auth_headers)
+    assert get_upload.status_code == 404
+    assert not upload_path.exists()
+
+    session_detail = client.get(f"/api/sessions/{session_id}", headers=auth_headers)
+    assert session_detail.status_code == 200
+    assert session_detail.json()["uploads"] == []
+
+    with client.app.state.database.session_factory() as db:
+        record = db.query(UploadRecord).filter(UploadRecord.id == upload_id).first()
+        assert record is None
+
+
+def test_sent_upload_cannot_be_deleted(
+    client: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
+    create_session = client.post(
+        "/api/sessions",
+        headers=auth_headers,
+        json={"title": "Sent upload"},
+    )
+    session_id = create_session.json()["id"]
+    create_message = client.post(
+        f"/api/sessions/{session_id}/messages",
+        headers=auth_headers,
+        json={"role": "user", "content": "bound upload"},
+    )
+    message_id = create_message.json()["id"]
+
+    upload_response = client.post(
+        f"/api/sessions/{session_id}/uploads",
+        headers=auth_headers,
+        data={"message_id": message_id},
+        files={"file": ("final.txt", b"keep me", "text/plain")},
+    )
+    assert upload_response.status_code == 201
+    upload_payload = upload_response.json()
+    upload_id = upload_payload["id"]
+    upload_path = client.app.state.settings.upload_storage_dir / upload_payload["storage_key"]
+    assert upload_path.exists()
+
+    delete_response = client.delete(f"/api/uploads/{upload_id}", headers=auth_headers)
+    assert delete_response.status_code == 409
+    assert delete_response.json()["detail"] == "Sent uploads cannot be deleted"
+    assert upload_path.exists()
+
+    get_upload = client.get(f"/api/uploads/{upload_id}", headers=auth_headers)
+    assert get_upload.status_code == 200
+    assert get_upload.json()["message_id"] == message_id
+
+    with client.app.state.database.session_factory() as db:
+        record = db.query(UploadRecord).filter(UploadRecord.id == upload_id).first()
+        assert record is not None
+        assert record.message_id == message_id
+
+
+def test_session_isolation_separates_authenticated_users(tmp_path) -> None:
+    settings = Settings(
+        database_url=f"sqlite+pysqlite:///{tmp_path / 'isolated-sessions.db'}",
+        admin_email="admin@example.com",
+        admin_username="admin",
+        admin_password="secret",
+        admin_users={"user-a": "secret-a", "user-b": "secret-b"},
+        admin_token_secret="test-secret-key-with-32-bytes-minimum",
+        upload_storage_dir=tmp_path / "uploads",
+    )
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        user_a = _login_headers(client, "user-a", "secret-a")
+        user_b = _login_headers(client, "user-b", "secret-b")
+
+        create_a = client.post("/api/sessions", headers=user_a, json={"title": "User A"})
+        create_b = client.post("/api/sessions", headers=user_b, json={"title": "User B"})
+        session_a_id = create_a.json()["id"]
+        session_b_id = create_b.json()["id"]
+
+        list_a = client.get("/api/sessions", headers=user_a)
+        list_b = client.get("/api/sessions", headers=user_b)
+        get_b_from_a = client.get(f"/api/sessions/{session_b_id}", headers=user_a)
+        get_a_from_b = client.get(f"/api/sessions/{session_a_id}", headers=user_b)
+
+    assert [item["title"] for item in list_a.json()] == ["User A"]
+    assert [item["title"] for item in list_b.json()] == ["User B"]
+    assert get_b_from_a.status_code == 404
+    assert get_a_from_b.status_code == 404
+
+
+def test_session_isolation_applies_to_messages_and_uploads(tmp_path) -> None:
+    settings = Settings(
+        database_url=f"sqlite+pysqlite:///{tmp_path / 'isolated-resources.db'}",
+        admin_email="admin@example.com",
+        admin_username="admin",
+        admin_password="secret",
+        admin_users={"user-a": "secret-a", "user-b": "secret-b"},
+        admin_token_secret="test-secret-key-with-32-bytes-minimum",
+        upload_storage_dir=tmp_path / "uploads",
+    )
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        user_a = _login_headers(client, "user-a", "secret-a")
+        user_b = _login_headers(client, "user-b", "secret-b")
+
+        create_session = client.post("/api/sessions", headers=user_a, json={"title": "Owned"})
+        session_id = create_session.json()["id"]
+        create_message = client.post(
+            f"/api/sessions/{session_id}/messages",
+            headers=user_a,
+            json={"role": "user", "content": "private"},
+        )
+        message_id = create_message.json()["id"]
+        upload = client.post(
+            f"/api/sessions/{session_id}/uploads",
+            headers=user_a,
+            files={"file": ("secret.txt", b"private upload", "text/plain")},
+        )
+        upload_id = upload.json()["id"]
+
+        assert client.get(f"/api/messages/{message_id}", headers=user_b).status_code == 404
+        assert client.patch(
+            f"/api/messages/{message_id}",
+            headers=user_b,
+            json={"content": "takeover"},
+        ).status_code == 404
+        assert client.get(f"/api/uploads/{upload_id}", headers=user_b).status_code == 404
+        assert client.get(f"/api/uploads/{upload_id}/content", headers=user_b).status_code == 404
+        assert client.delete(f"/api/uploads/{upload_id}", headers=user_b).status_code == 404
+
+
+def test_sessions_are_shared_when_admin_auth_is_disabled(tmp_path) -> None:
+    settings = Settings(
+        database_url=f"sqlite+pysqlite:///{tmp_path / 'shared-sessions.db'}",
+        admin_email="admin@example.com",
+        admin_username="admin",
+        admin_password="secret",
+        admin_token_secret="test-secret-key-with-32-bytes-minimum",
+        upload_storage_dir=tmp_path / "uploads",
+        admin_auth_enabled=False,
+    )
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        client.post("/api/sessions", json={"title": "Shared A"})
+        client.post("/api/sessions", json={"title": "Shared B"})
+
+        first_list = client.get("/api/sessions")
+        second_list = client.get("/api/sessions")
+
+    assert sorted(item["title"] for item in first_list.json()) == ["Shared A", "Shared B"]
+    assert sorted(item["title"] for item in second_list.json()) == ["Shared A", "Shared B"]
