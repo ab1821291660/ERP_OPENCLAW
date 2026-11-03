@@ -8,13 +8,15 @@ from pydantic import BaseModel, Field
 # =============================================================================
 # ★ 1. 运行时上下文 —— ProcurementContext 和 UserPreferences 数据类
 @dataclass
-class ProcurementContext:
+class ProcurementContext:####context上下文 ##================
     """
     运行时上下文，由调用方在 invoke 时传入。
     用于传递当前用户身份等基础信息。
     """
     user_id: str                # 必填，用户唯一标识
     username: str               # 必填，用户姓名/登录名
+
+
 
 
 @dataclass

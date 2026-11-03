@@ -2,7 +2,6 @@
 Human-in-the-Loop 工具集。
 提供运行时人工交互所需的工具，包括订单数据补充等。
 工具通过 langgraph.types.interrupt() 暂停执行，等待人工输入后恢复。
-
 使用方式:
     from agent.tools.hitl_tools import request_order_info
 """
@@ -24,7 +23,7 @@ def request_order_info(missing_fields: str, collected_data: str) -> str:
          人工补充的数据（JSON 字符串）
      """
     response = interrupt({
-        "type": "order_info_request",##===================================
+        "type": "order_info_request",##===================================##===================================##===================================
         "missing_fields": missing_fields,
         "collected_data": collected_data,
     })

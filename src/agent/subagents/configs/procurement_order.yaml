@@ -26,7 +26,7 @@ tools:
 
 # 人工确认配置（Human-in-the-Loop）
 # order_create / order_update 执行前暂停，等待人工审批    request_order_info ##===================================##===================================
-interrupt_on:
+interrupt_on:  ##===================================##===================================##===================================##===================================
   order_create:
     allowed_decisions: ["approve", "reject"]
   order_update:

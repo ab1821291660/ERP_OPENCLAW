@@ -8,6 +8,7 @@ https://my.feishu.cn/docx/WQVndx4S0odEFUxNXGKcmZSYn0c  基于Harness Engineering
 从Agent到手撕OpenClaw的企业实战
 链接：https://my.feishu.cn/docx/X61gdFjdzou0tgx1NvlcHlYyn4d?from=from_copylink
 密码：154&56n8
+下载的md见目录：：z---- 从Agent到手撕OpenClaw的企业实战
 
 
 

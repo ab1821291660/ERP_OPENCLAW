@@ -60,7 +60,7 @@ def write_debug_log(filepath: str, event_type: str, data: dict, raw_token: objec
         pass  # 调试日志失败不影响主流程
 
 
-def ________主代理调task__子tools():
+def ______主代理调task__子tools():
     pass
 def extract_subagent_name(namespace: tuple) -> str:
     """
@@ -207,7 +207,7 @@ def create_sse_message(data: dict) -> str:
 
 
 
-def ________chat的stream():
+def _______________chat的stream():
     pass
 # ============================================================
 # 流式对话核心逻辑
@@ -230,12 +230,57 @@ async def stream_chat_response(
 
     同时累积完整的展示消息列表（包含子代理消息），在流结束后存入 MongoDB。
     """
+    # ##
+    # ##
+    # # ★ 1. 运行时上下文 —— ProcurementContext 和 UserPreferences 数据类
+    # # @dataclass
+    # # class ProcurementContext:####context上下文 ##================
+    # #     """
+    # #     运行时上下文，由调用方在 invoke 时传入。
+    # #     用于传递当前用户身份等基础信息。
+    # #     """
+    # #     user_id: str                # 必填，用户唯一标识
+    # #     username: str               # 必填，用户姓名/登录名
+    # context_schema = ProcurementContext,  ##================##from agent.scheam import ProcurementContext
     context = {"user_id": user_id, "username": user_id}
 
 
 
 
-    config = agent_loader.create_config(thread_id, user_id=user_id)##===================================
+    # # ★ 2.4 配置与会话
+    # # 创建 LangGraph 配置字典
+    # def create_config(
+    #         self,
+    #         thread_id: Optional[str] = None,
+    #         user_id: Optional[str] = None,
+    #         **kwargs
+    # ) -> Dict[str, Any]:
+    #     """
+    #     创建 LangGraph 运行所需的配置字典
+    #     如果未提供 thread_id 会自定生成一个 UUID
+    #     Args:
+    #         thread_id: 会话线程 ID，不传则自动生成 UUID
+    #         user_id: 用户 ID
+    #         **kwargs: 其他可传入的可选配置项
+    #     Returns:
+    #        包含 configurable 键的标准 LangGraph 配置字典
+    #     """
+    #     return {
+    #         "configurable": {
+    #             "thread_id": thread_id or str(uuid.uuid4()),##===================================
+    #             "user_id": user_id,##===================================
+    #             **kwargs
+    #         }
+    #             #### context_schema=ProcurementContext,##from agent.scheam import ProcurementContext
+    #             # #class ProcurementContext:
+    #             # # """
+    #             # # 运行时上下文，由调用方在 invoke 时传入。
+    #             # # 用于传递当前用户身份等基础信息。
+    #             # # """
+    #             # # user_id: str                # 必填，用户唯一标识
+    #             # # username: str               # 必填，用户姓名/登录名
+    #     }
+    config = agent_loader.create_config(thread_id, user_id=user_id)##对应configurable##===================================
 
 
 
@@ -258,11 +303,12 @@ async def stream_chat_response(
         return
 
 
+
+
     collected_content = ""
     # 工具调用栈，支持嵌套工具调用（主代理调 task →→→→ 子代理调 generate_chart）
     tool_call_stack = []
-
-
+    ##
     # ---- 根据模式构建 input 和 display_messages ----
     if resume_data is not None:
         # 恢复模式：加载已有展示消息，用 Command(resume=...) 恢复
@@ -294,7 +340,7 @@ async def stream_chat_response(
         # stream_mode=["messages", "values"] — messages 流显示 + values流检测中断##===================================##===================================
         async for chunk in agent_graph.astream(
             input=current_input,
-            config=config,##===================================
+            config=config,##对应configurable##===================================
             context=context,##===================================
             stream_mode=["messages", "values"],##===================================##===================================
             subgraphs=True, # 启用子代理流式输出##===================================##===================================
@@ -388,7 +434,7 @@ async def stream_chat_response(
 
             # 判断消息来源
             is_subagent = any(s.startswith("tools:") for s in namespace)
-            source = extract_subagent_name(namespace) if is_subagent else "main"
+            source = extract_subagent_name(namespace) if is_subagent else "main"##===================================
 
             write_debug_log(debug_log, "RAW_CHUNK", {##--------
                 "ns": list(namespace),
@@ -606,6 +652,8 @@ async def chat_stream(request: ChatRequest):
     )
 # ============================================================
 # ============================================================
+# ============================================================
+# ============================================================
 # 中断恢复请求模型
 class ResumeRequest(BaseModel):
     """中断恢复请求体，resume 字段的格式取决于中断类型：
@@ -637,7 +685,7 @@ async def chat_resume(thread_id: str, request: ResumeRequest):
     )
 
 
-def ____():
+def ______其它():
     pass
 @router.get("/chat/{thread_id}")
 async def get_chat_state(thread_id: str):

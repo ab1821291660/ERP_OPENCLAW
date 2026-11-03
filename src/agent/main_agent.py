@@ -61,7 +61,15 @@ from agent.subagents.loader import load_subagent_configs, resolve_subagent_tools
 #
 from agent.tools.web_search import web_search
 
-
+# # ★ 1. 运行时上下文 —— ProcurementContext 和 UserPreferences 数据类
+# @dataclass
+# class ProcurementContext:####context上下文 ##================
+#     """
+#     运行时上下文，由调用方在 invoke 时传入。
+#     用于传递当前用户身份等基础信息。
+#     """
+#     user_id: str                # 必填，用户唯一标识
+#     username: str               # 必填，用户姓名/登录名
 from agent.scheam import ProcurementContext ##context上下文 ##================
 def _setup_logging() -> None:
     """根据 APP_ENV 环境变量初始化全局日志配置。
@@ -155,7 +163,7 @@ async def precompute_agent_context() -> PrecomputedContext:
     else:
         logger.info(f"  已加载 {len(raw_configs)} 个子 Agent 配置")
     logger.info("=== 预计算完成 ===")
-    return PrecomputedContext(##===================================
+    return PrecomputedContext(##见上面的##===================================
         all_mcp_tools=all_mcp_tools,
         analyst_mcp_tools=analyst_mcp_tools,
         order_mcp_tools=order_mcp_tools,
@@ -168,6 +176,9 @@ async def precompute_agent_context() -> PrecomputedContext:
     )
 
 
+
+
+def ________create_main_agent():pass
 # =============================================================================
 # ★ 2. create_main_agent —— 每次请求基于 per-user 沙箱创建 agent graph ##===================================##===================================##===================================##===================================
 async def create_main_agent(
@@ -363,6 +374,8 @@ async def create_main_agent(
         ##
         # 2. 工具错误捕获：wrap_tool_call → ToolMessage(status="error")，防止单工具崩溃
         ToolErrorMiddleware(),
+        ##
+        ##
         # 3. 用户上下文注入
         ContextInjectionMiddleware(),##================ProcurementContext的user_id与username__与原有的SystemMessage是怎么整合的呢__沙箱中的memories_userid_preferences.md
         # 4. 技能同步（从本地 → 到沙箱）
@@ -408,14 +421,16 @@ async def create_main_agent(
         checkpointer=CHECKPOINTER,
         ##
         ##
-        context_schema=ProcurementContext,##from agent.scheam import ProcurementContext
-        #class ProcurementContext:
-        # """
-        # 运行时上下文，由调用方在 invoke 时传入。
-        # 用于传递当前用户身份等基础信息。
-        # """
-        # user_id: str                # 必填，用户唯一标识
-        # username: str               # 必填，用户姓名/登录名
+        # ★ 1. 运行时上下文 —— ProcurementContext 和 UserPreferences 数据类
+        # @dataclass
+        # class ProcurementContext:####context上下文 ##================
+        #     """
+        #     运行时上下文，由调用方在 invoke 时传入。
+        #     用于传递当前用户身份等基础信息。
+        #     """
+        #     user_id: str                # 必填，用户唯一标识
+        #     username: str               # 必填，用户姓名/登录名
+        context_schema=ProcurementContext,##================##from agent.scheam import ProcurementContext
     )
     logger.info(f"=== 用户 {user_id} Agent Graph 创建完成 ===")
     return agent_graph

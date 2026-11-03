@@ -85,7 +85,7 @@ def setup_sandbox(config, sandbox_id=None, image=None) -> OpenSandboxBackend:
             # )
         )
 
-    backend = OpenSandboxBackend(sandbox=sandbox)
+    backend = OpenSandboxBackend(sandbox=sandbox)##===================================##===================================##===================================
     print(f"[INFO] 沙箱就绪，ID：{sandbox.id}")
 
     # 预创建 skills 需要的目录，避免 Agent 运行时遇到 FileNotFoundError
@@ -93,16 +93,14 @@ def setup_sandbox(config, sandbox_id=None, image=None) -> OpenSandboxBackend:
 
     _send_files(backend)
 
-    # 创建 Python venv + 预装第三方依赖
-    _create_venv(backend)
-
+    # 创建 Python venv + 预装第三方依赖--pip等等
+    _create_venv(backend)##===================================##===================================##===================================
     return backend
 
 
 # =============================================================================
 # ★ 2. 内部常量：目录、venv 路径、预装包列表
 # =============================================================================
-
 # skills 运行时依赖的目录（需在沙箱中预创建）
 _SKILL_DIRS = ["/analysis/tmp"]
 

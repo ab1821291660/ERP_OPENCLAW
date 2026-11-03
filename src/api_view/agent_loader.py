@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from pymongo import MongoClient
 from agent.config import CHECKPOINTER,    MONGODB_CHECKPOINT_COLLECTION, MONGODB_DB_NAME
-from agent.env_utils import CLEANUP_SANDBOX_ON_SHUTDOWN, PREWARM_SANDBOX
+from agent.env_utils import CLEANUP_SANDBOX_ON_SHUTDOWN, PREWARM_SANDBOX##=================================== ##===================================
 from agent.backends import sandbox_manager
 from agent.main_agent import (
     PrecomputedContext,##===================================##===================================
@@ -32,7 +32,10 @@ class _StateSnapshot:
 class AgentLoader:
     """
     Agent 加载器单例器
-    复杂管理Agent生命周期、MongoDB链接、沙箱管理、和会话相关操作。
+    复杂管理Agent生命周期、
+    MongoDB链接、
+    沙箱管理、
+    和会话相关操作。
     采用 Graph Factory：每次请求基于 per-user 沙箱创建 agent graph ##===================================##===================================
     """
     # 单例实例
@@ -46,6 +49,7 @@ class AgentLoader:
     # 最近创建的 agent graph 引用（用于状态查询；所有 graph 共享同一 checkpointer）
     _agent = None
 
+
     # =====================================================================
     # ★ 2.1 单例构造
     def __new__(cls):
@@ -54,32 +58,37 @@ class AgentLoader:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+
     # =====================================================================
     # ★ 2.2 初始化与关闭
     # 启动初始化
     async def initialize(self):
         """
-        启动时初始化： MongoDB + 沙箱管理器 + 预计算 + 预热沙箱
+        启动时初始化： MongoDB + 预计算 + 沙箱管理器 + 预热沙箱
 
         预计算 （MCP 工具/YAML 配置） 执行一次，所有请求复用。
 
         预热沙箱在启动阶段完成（～15秒），首个用户连接时零等待。
         """
         # 防重入：已初始化且预计算上下文存在时，直接返回缓存的 agent，避免重复初始化
-        if self._initialized and self._precomputed is not None:
+        if self._initialized and self._precomputed is not None:##===================================
             return self._agent
+
 
         print("[AgentLoader] 开始初始化...")
         try:
             # MongoDB 链接
             self._mongodb_client = MongoClient(MONGODB_URI)
 
-            # 2.  沙箱管理器初始化（MongoDB 连接 + 索引）
-            await sandbox_manager.initialize(self._mongodb_client)##===================================##===================================
 
             # 3. 预计算 MCP 工具 + 图表工具 + YAML 配置
             self._precomputed = await precompute_agent_context()##===================================
             print("[AgentLoader] 预计算完成（MCP 工具 + 图表工具 + YAML 配置）")
+
+
+            # 2.  沙箱管理器初始化（MongoDB 连接 + 索引）
+            await sandbox_manager.initialize(self._mongodb_client)##===================================##===================================
+
 
             # 4. 沙箱预热可选；本地开发默认关闭，避免拖慢 Python 服务启动。
             if PREWARM_SANDBOX:### 开启后服务启动时会创建一个预热沙箱；本地开发建议关闭。PREWARM_SANDBOX=false
@@ -94,9 +103,11 @@ class AgentLoader:
                 self._mongodb_client = None
             raise
 
+
     # 销毁用户沙箱
     async def cleanup_user(self, user_id: str) -> None:
         await  sandbox_manager.cleanup_user(user_id)##===================================##===================================
+
 
     # 关闭清理
     async def shutdown(self) -> None:
@@ -112,12 +123,15 @@ class AgentLoader:
             self._mongodb_client = None
             print("[AgentLoader] MongoDB 连接已关闭")
 
-        self._initialized = False
-        self._precomputed = None
-        self._agent = None
+        self._initialized = False##===================================
+        self._precomputed = None##===================================
+        self._agent = None##===================================
+
+
+
 
     # =====================================================================
-    def ________主主____单例agent__AICoding为多例__58为单例(self):
+    def ________主主____单例agent共享沙箱的话_此处好像是多例涉及用户own沙箱get_agent_for_user____AICoding为多例____58为单例(self):
         pass
     # ★ 2.3 Agent 实例管理
     # 获取最近的 Agent 实例
@@ -143,9 +157,7 @@ class AgentLoader:
     ) -> Dict[str, Any]:
         """
         创建 LangGraph 运行所需的配置字典
-
         如果未提供 thread_id 会自定生成一个 UUID
-
         Args:
             thread_id: 会话线程 ID，不传则自动生成 UUID
             user_id: 用户 ID
@@ -155,8 +167,8 @@ class AgentLoader:
         """
         return {
             "configurable": {
-                "thread_id": thread_id or str(uuid.uuid4()),
-                "user_id": user_id,
+                "thread_id": thread_id or str(uuid.uuid4()),##===================================
+                "user_id": user_id,##===================================
                 **kwargs
             }
                 #### context_schema=ProcurementContext,##from agent.scheam import ProcurementContext
@@ -187,7 +199,7 @@ class AgentLoader:
         ##
         ##
         # 2. 创建配置
-        config = self.create_config(user_id=user_id)
+        config = self.create_config(user_id=user_id)##===================================
         config["configurable"]["user_id"] = user_id
         # 3. 创建 agent graph
         agent_graph = await create_main_agent(
@@ -226,17 +238,17 @@ class AgentLoader:
         """
         config = self.create_config(thread_id=thread_id)
         states = []
-        async  for ct in CHECKPOINTER.alist(config, limit=limit):##===================================
+        async  for ct in CHECKPOINTER.alist(config, limit=limit):##===================================##===================================##===================================
             # #class _StateSnapshot:
             #     """状态快照数据结构，用于从checkpoint中提取关键信息。"""
-            #     values: dict  # 通道值（channel_values），包含当前 agent 状态的所有数据
+            #     values: dict  # 通道值（channel_values），包含当前 agent 状态的所有数据##===================================##===================================##===================================
             #     config: dict  # 会话配置信息（包含 thread_id、user_id 等）
             #     created_at: datetime | str | None = None  # 创建时间戳
             #     ##
             #     parent_config: dict | None = None  # 父级 checkpoint 配置，用于追踪状态链
             #     metadata: dict | None = None  # 附加元数据
             snapshot = _StateSnapshot(
-                values=ct.checkpoint.get("channel_values", {}),##===================================
+                values=ct.checkpoint.get("channel_values", {}),##===================================##===================================##===================================
                 config=ct.config,
                 created_at=ct.metadata.get("timestamp") if ct.metadata else None,
                 ##
@@ -345,6 +357,7 @@ class AgentLoader:
         collection = db[MONGODB_CHECKPOINT_COLLECTION]
         try:
             result = collection.delete_many({"thread_id": thread_id})##===================================
+            ##
             ##
             display_collection = db["session_display_messages"]
             display_result = display_collection.delete_many({"thread_id": thread_id})##===================================

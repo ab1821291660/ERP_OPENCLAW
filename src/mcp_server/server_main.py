@@ -38,7 +38,7 @@ def main():
     """MCP Server 启动入口。启动 Streamable HTTP 服务并阻塞等待"""
     # 启动 Streamable HTTP 服务
     mcp.run(
-        transport="streamable-http",
+        transport="streamable-http",##===================================##===================================##===================================
         host=MCP_HOST,##===================================
         port=MCP_PORT,##===================================
         path=MCP_PATH##===================================

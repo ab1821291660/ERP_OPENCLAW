@@ -34,7 +34,6 @@ if ANALYSIS_MCP_URL:##空的
 
 # =============================================================================
 # ★ 2. 工具分组规则（前缀匹配） —— 定义分析/订单/图表工具的前缀筛选
-# =============================================================================
 # 工具分组规则（前缀匹配）
 # 分析类工具前缀：supplier_（供应商查询）、part_（零部件查询）、inventory_（库存预警）
 ANALYST_TOOL_PREFIXES = ("supplier_", "part_", "inventory_")
@@ -48,7 +47,6 @@ CHART_TOOL_PREFIXES = ("generate_",)
 
 # =============================================================================
 # ★ 3. 核心函数 —— 加载 MCP 工具并分组
-# =============================================================================
 async def load_mcp_tools(server_config: dict | None = None) -> Tuple[List, List, List, List]:
     """
     连接到所有 MCP Server ，加载全部工具并分组。
@@ -112,3 +110,4 @@ async def load_mcp_tools(server_config: dict | None = None) -> Tuple[List, List,
     )
 
     return all_tools, analyst_tools, order_tools, chart_tools
+

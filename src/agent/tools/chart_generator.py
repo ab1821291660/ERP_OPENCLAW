@@ -349,7 +349,7 @@ def create_generate_chart_tool(chart_mcp_tools: list) -> tuple:
     # =============================================================================
     @tool("generate_visualization")
     async def generate_visualization(
-        chart_type: str,
+        chart_type: str,##===================================##===================================
         chart_config: dict,
     ) -> str:
         """
