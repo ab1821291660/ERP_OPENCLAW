@@ -418,7 +418,7 @@ async def create_main_agent(
         ##
         ##
         store=STORE,## InMemoryStore()
-        checkpointer=CHECKPOINTER,
+        checkpointer=CHECKPOINTER,##MongoDBSaver
         ##
         ##
         # ★ 1. 运行时上下文 —— ProcurementContext 和 UserPreferences 数据类
