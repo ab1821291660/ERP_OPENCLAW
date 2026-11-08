@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 
 # =============================================================================
+def _______context运行时上下文():pass
 # ★ 1. 运行时上下文 —— ProcurementContext 和 UserPreferences 数据类
 @dataclass
 class ProcurementContext:####context上下文 ##================
@@ -18,7 +19,7 @@ class ProcurementContext:####context上下文 ##================
 
 
 
-
+def _______记忆更新():pass
 @dataclass
 class UserPreferences:
     """
@@ -31,13 +32,14 @@ class UserPreferences:
     preferred_language: Optional[str] = None  # 'zh', 'en' 等
     recent_suppliers: list[str] = None  # 近期使用的供应商列表
     recent_queries: list[str] = None  # 近期分析需求摘要列表
-
     def __post_init__(self):
         """初始化后处理：将 None 值的可变字段默认化为空列表，避免共享可变默认值。"""
         if self.recent_suppliers is None:
             self.recent_suppliers = []
         if self.recent_queries is None:
             self.recent_queries = []
+
+
 
 
 def _______():pass
