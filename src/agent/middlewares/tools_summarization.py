@@ -35,7 +35,9 @@ def build_summarization_middleware(
         SummarizationToolMiddleware: 可直接传入 create_deep_agent 的 middleware 列表。
     """
     # 该工厂函数会自动创建一个 SummarizationMiddleware 并将其嵌入到SummarizationToolMiddleware 中。
-    # 触发阈值等参数使用框架默认值，通常为上下文达到 85% 时触发自动摘要，这已满足多数生产场景。
+    ####长工具结果：：>10k写入文件==保留路径+前1行预览##===================================
+    ####触发阈值等参数使用框架默认值，通常为上下文达到 85% 时触发自动摘要，这已满足多数生产场景。##===================================
+    ####手动压缩----##===================================
     return create_summarization_tool_middleware(
         model=model,
         backend=backend,##===================================？？
