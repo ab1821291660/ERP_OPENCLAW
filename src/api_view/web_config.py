@@ -1,9 +1,5 @@
 
 
-# ★ 后端配置文件
-# ★
-# ★ 包含 MongoDB 连接配置、项目路径等
-# =============================================================================
 """
 后端配置文件
 包含 MongoDB 连接配置、项目路径等
@@ -27,16 +23,20 @@ MONGODB_CHECKPOINT_COLLECTION = env_utils.MONGODB_CHECKPOINT_COLLECTION
 PROJECT_DIR = Path(__file__).parent.parent
 # Agent 相关代码路径
 AGENT_DIR = PROJECT_DIR / "src" / "agent"
+        # # 子代理配置文件（在 src 目录下）
+        # SUBAGENTS_CONFIG = PROJECT_DIR / "src" / "subagents.yaml"
+        # # AGENTS.md 文件路径
+        # AGENTS_MD_PATH = PROJECT_DIR / "src" / "AGENTS.md"
+# 子代理配置文件（在 src 目录下）
+SUBAGENTS_CONFIG = AGENT_DIR / "subagents" / "configs"
+# AGENTS.md 文件路径
+AGENTS_MD_PATH = AGENT_DIR / "memory" / "AGENTS.md"
 # =============================================================================# =============================================================================
 # =============================================================================# =============================================================================
 # 技能目录（沙箱中的路径，与 sandbox_agent.py 保持一致）##===================================##===================================
 SKILLS_PATH = "/workspace/skills"
-# 内存文件（AGENTS.md）
+# 沙箱中的--内存文件（AGENTS.md）
 MEMORY_PATH = "/AGENTS.md"
-# 子代理配置文件（在 src 目录下）
-SUBAGENTS_CONFIG = PROJECT_DIR / "src" / "subagents.yaml"
-# AGENTS.md 文件路径
-AGENTS_MD_PATH = PROJECT_DIR / "src" / "AGENTS.md"
 
 
 
