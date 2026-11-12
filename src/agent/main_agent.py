@@ -97,6 +97,8 @@ _setup_logging()
 logger = logging.getLogger(__name__)
 
 
+
+def ________PrecomputedContext():pass
 # =============================================================================
 # ★ 1. PrecomputedContext —— 启动时预计算的可复用组件（不依赖用户沙箱）##===================================##===================================
 @dataclasses.dataclass
@@ -382,13 +384,13 @@ async def create_main_agent(
         SkillsSyncMiddleware(sandbox_backend),##--------
         # 5. 持久化技能恢复（从StoreBackend → 到沙箱）##--------
         UserSkillsRestoreMiddleware(sandbox_backend,    SKILLS_STORE_NAMESPACE),##--------  ##("skills",)
-        # 6. 对话摘要
+        # 6. 对话摘要 + compact_conversation工具##===================================
         build_summarization_middleware(backend_factory, SUMMARY_MODEL),##---------------- ##===================================？？
         # 7. 用户记忆更新
         MemoryUpdateMiddleware(model=SUMMARY_MODEL),##================
         ##
         ##
-        # 8. 沙箱熔断：连续沙箱错误 ≥ 阈值 → jump_to=end
+        # 8. 沙箱熔断：连续沙箱错误 ≥ 阈值 → jump_to=end##===================================##===================================
         SandboxCircuitBreakerMiddleware(),
         # 9. 模型调用限制
         ModelCallLimitMiddleware(run_limit=50),##===================================
@@ -430,7 +432,7 @@ async def create_main_agent(
         #     """
         #     user_id: str                # 必填，用户唯一标识
         #     username: str               # 必填，用户姓名/登录名
-        context_schema=ProcurementContext,##================##from agent.scheam import ProcurementContext
+        context_schema=ProcurementContext,##输入对应的为context##================##from agent.scheam import ProcurementContext
     )
     logger.info(f"=== 用户 {user_id} Agent Graph 创建完成 ===")
     return agent_graph

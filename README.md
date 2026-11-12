@@ -1,3 +1,14 @@
+
+
+
+
+【【多例-】】 chat的stream_chat_response----调用agent_loader的get_agent_for_user获取/创建用户沙箱
+
+预热沙箱：：可n个
+
+每次请求基于 per-user 沙箱轻量创建 agent graph，实现用户级沙箱隔离。##===================================##===================================
+
+
 # ERP OpenClaw
 基于 LangGraph、DeepAgents、FastAPI、MCP 和 Vue 3 的 ERP 采购智能助手。
 ## 运行环境

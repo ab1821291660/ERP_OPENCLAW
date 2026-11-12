@@ -96,8 +96,6 @@ class AgentLoader:
 
             # 2.  沙箱管理器初始化（MongoDB 连接 + 索引）
             await sandbox_manager.initialize(self._mongodb_client)##===================================##===================================
-
-
             # 4. 沙箱预热可选；本地开发默认关闭，避免拖慢 Python 服务启动。
             if PREWARM_SANDBOX:### 开启后服务启动时会创建一个预热沙箱；本地开发建议关闭。PREWARM_SANDBOX=false
                 await sandbox_manager.pre_warm()##===================================##===================================
@@ -200,7 +198,7 @@ class AgentLoader:
         Returns:
             CompiledStateGraph：该用户的 agent graph
         """
-        # 1. 获取 / 创建用户沙箱
+        # 1. 获取/创建用户沙箱
         sandbox_backend = await sandbox_manager.ensure_sandbox_for_user(user_id)##===================================
         ##
         ##
