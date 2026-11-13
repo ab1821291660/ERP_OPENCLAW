@@ -77,16 +77,17 @@ make lint
 
 
 官网：https://docs.langchain.com/oss/python/deepagents/overview
+官网马：https://www.mashibing.com/course/2959 ----
 基础：：
 沧海九粟【书】==白鲸datawhalechina::https://github.com/datawhalechina/deepagents-in-action
-## 参考url
-liqiangZzz：：https://github.com/liqiangZzz/ERP_OPENCLAW --
+## ----参考url
+liqiangZzz最早：：https://github.com/liqiangZzz/ERP_OPENCLAW --
 todo
 ooo1208[包含自进化]：：https://github.com/ooo1208/ERP_OPENCLAW --
 liuchen6667：：https://github.com/liuchen6667/deepseek-auto-evolving-harness
 
 
-## 多模态
+## ---多模态
 datawhalechina的start-mllm：：https://github.com/datawhalechina/start-mllm
 
 
