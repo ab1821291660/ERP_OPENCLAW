@@ -102,7 +102,7 @@ src/
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=ZDI3NDdiZWE4NTQ0OTg2Y2EzNTk2N2JiOWMwZDJkNmRfNDIyZTJkYzNhY2RjOTI1ZjkxYzI2ZmIyNTFlNTQ2Y2FfSUQ6NzY0NzA2NjEwOTgzNDkyMzI1OF8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
-## 1、什么是 Harness Engineering？ 
+## 1、--------上份的前面有--------什么是 Harness Engineering？ 
 
 • **`Prompt Engineering`**（2022\-2024 主流）主要优化单次交互的质量，重点是 “一句提示词该怎么写，模型才更容易给出想要的结果”
 
@@ -138,7 +138,7 @@ src/
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=M2IyM2UzYTBlMWMyZWQyOWEzN2ZkYjdkMmI2NTlkN2VfMjExMGYxMmY3M2FjYjViN2Q2MDI5Yzg5NjFjOGE3MDRfSUQ6NzY0NzA2ODUyMTUyNTEzNjM2Nl8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
-## 2、项目中Herness架构的核心能力\(一\)：长周期复杂任务的Planning能力
+## ----2、项目中Herness架构的核心能力\(一\)：长周期复杂任务的Planning能力
 
 提供 `write_todos` 工具，Agent 可维护结构化任务列表（pending/in\_progress/completed），持久化在 Agent state 中。
 
@@ -146,7 +146,7 @@ src/
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=NGI4YzUxZjg5NDEyMzI0NTA2ODFkMDk0ZmJkYjRlMGJfYWNmNjEyYTRmYmQ4OWZiMzVmOGQyZjIyY2Q4OTY4Y2FfSUQ6NzYzOTI2NjExMjczMTAyNDYwNl8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
-## 3、项目中Herness架构的核心能力\(二\)：安全的和动态路由的文件系统
+## ----3、项目中Herness架构的核心能力\(二\)：安全的和动态路由的文件系统
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=NWVkNTAyMDEzYjQzZWU3MjllYzgwNTRkODg2MDQzMWRfYmU0YmRkZGJiOTVkYTFjYjIxMzdlZGZmN2Y5ZjM1MTFfSUQ6NzY0NzA4NTQ3OTkwNjY1OTU3Nl8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
@@ -170,7 +170,7 @@ backend = lambda rt: CompositeBackend(
 )
 ```
 
-## 4、项目中Herness架构的核心能力\(三\)： Subagent的任务委派
+## ----4、项目中Herness架构的核心能力\(三\)： Subagent的任务委派
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=NWU3YjdiNjkwOGNmNjExMzQyMzY5NDNmZjE0YWZmM2VfODM3OTVlM2ViNTBmMGFiYmNmNmJiYjFkNzM1NTk0MDNfSUQ6NzY0NzE0Njc3NDA1ODQyMTE3Nl8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
@@ -196,7 +196,7 @@ YAML 配置文件 (configs/*.yaml)
 
 
 
-## 5、项目中Herness架构的核心能力\(四\)：Context Management — 上下文管理
+## ----5、项目中Herness架构的核心能力\(四\)：Context Management — 上下文管理
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=NDlmOTE4ODcwMWJlNDRkYWYwMGJiMDJjNDgyNGM1NjNfNDNhMTViNGMxNTI2YTgyYjBiMzYwODEyNDhiODQxNDNfSUQ6NzY0NzgxNjA2MTE0ODM4NDI0M18xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
@@ -222,7 +222,7 @@ analyst 执行 5 步分析流程时会产生大量中间结果（MCP 返回的�
 
 
 
-## 6、项目中Herness架构的核心能力\(五\)：Skills — 渐进式技能系统（自我进化）
+## ----6、项目中Herness架构的核心能力\(五\)：Skills — 渐进式技能系统（自我进化）
 
 遵循 Agent Skills 标准，每个技能是含 `SKILL.md` 的目录，支持渐进式披露——启动时只读 frontmatter，需要时再加载完整内容。
 
@@ -276,7 +276,7 @@ yaml system_prompt: "ls /skills/procurement/ 扫描可用技能"
 
 
 
-## 7、项目中Herness架构的核心能力\(六\)： Human\-in\-the\-Loop — 人工介入
+## ----7、项目中Herness架构的核心能力\(六\)： Human\-in\-the\-Loop — 人工介入
 
 通过 `interrupt_on` 参数选择性地在工具调用前暂停，等待人工审批或修改。
 
@@ -317,7 +317,7 @@ yaml system_prompt: "ls /skills/procurement/ 扫描可用技能"
 
 
 
-## 8、项目中Herness架构的核心能力\(七\)：Memory — 用户偏好记忆管理
+## ----8、项目中Herness架构的核心能力\(七\)：Memory — 用户偏好记忆管理
 
 **项目实现**：以用户作用域来管理Memory
 
@@ -354,7 +354,7 @@ yaml system_prompt: "ls /skills/procurement/ 扫描可用技能"
 
 
 
-## 9、项目的最大安全问题： 基于OpenSandbox来解决
+## ----9、项目的最大安全问题： 基于OpenSandbox来解决
 
 OpenSandbox 就是这个项目的**唯一安全边界**。所有 Agent 行为——运行 Python 脚本、执行 Shell 命令、读写文件、下载，新建技能（skill）、爬取网页——全部发生在这个容器内部。**OpenSandbox 的配置决定了这道墙有多厚。**
 
@@ -699,7 +699,7 @@ system_prompt: |
   你是 XXX 助手...
 ```
 
-# 第四、基于SSE事件流的完整的前后端
+# 第四、----less上份已有----基于SSE事件流的完整的前后端
 
 ## 1、架构概览：三文件分工
 
