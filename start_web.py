@@ -48,9 +48,7 @@ def run_backend():
 
     t = threading.Thread(target=output_backend, daemon=True)
     t.start()
-
     return backend_proc
-
 def check_backend_ready(max_wait=180):
     """检查后端是否就绪"""
     print("[System] Waiting for backend to be ready...", flush=True)
@@ -73,6 +71,9 @@ def check_backend_ready(max_wait=180):
         print(f"[System] Waiting... ({elapsed}s / {max_wait}s)", flush=True)
 
     return False
+
+
+
 
 def run_frontend():
     """启动前端服务"""
@@ -123,6 +124,9 @@ def run_frontend():
 
     return frontend_proc
 
+
+
+
 def main():
     print("=" * 60, flush=True)
     print("         DeepAgent Web Application Launcher", flush=True)
@@ -165,17 +169,18 @@ def main():
 
     try:
         # 启动后端
-        backend_proc = run_backend()
-
+        backend_proc = run_backend()##===================================
         # 等待后端就绪（包括 Agent 初始化）
-        if not check_backend_ready(max_wait=180):
+        if not check_backend_ready(max_wait=180):##===================================
             print("[ERROR] Backend failed to start within 180 seconds", flush=True)
             print("[ERROR] Please check the logs above for errors", flush=True)
             cleanup()
             return
 
+
         # 启动前端
-        frontend_proc = run_frontend()
+        frontend_proc = run_frontend()##===================================
+
 
         print()
         print("=" * 60, flush=True)
@@ -188,16 +193,14 @@ def main():
         print(flush=True)
         print("  Press Ctrl+C to stop all services", flush=True)
         print("=" * 60, flush=True)
-
         # 等待
         while True:
             time.sleep(1)
-
     except KeyboardInterrupt:
         cleanup()
     except Exception as e:
         print(f"[ERROR] An error occurred: {e}", flush=True)
         cleanup()
-
 if __name__ == "__main__":
     main()
+
