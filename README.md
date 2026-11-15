@@ -8,7 +8,16 @@
 
 每次请求基于 per-user 沙箱轻量创建 agent graph，实现用户级沙箱隔离。##===================================##===================================
 
+码士 Harness 多智能体采购课程 --官网马：https://www.mashibing.com/course/2959 ----
+Langfuse 智能体评估课程
+公开 Harness 课程视频：：https://www.bilibili.com/video/BV1Cs7h6MEsX/?vd_source=56544f773befbd3fb9a51b0e1c98614c&spm_id_from=333.788.player.switch&p=7  
+公开财务分析与评估视频：：https://www.bilibili.com/video/BV1aZub6bE3W/?vd_source=56544f773befbd3fb9a51b0e1c98614c&spm_id_from=333.788.videopod.episodes&p=7  
 
+
+##===================================##===================================
+##===================================##===================================
+##===================================##===================================
+##===================================##===================================
 # ERP OpenClaw
 基于 LangGraph、DeepAgents、FastAPI、MCP 和 Vue 3 的 ERP 采购智能助手。
 ## 运行环境

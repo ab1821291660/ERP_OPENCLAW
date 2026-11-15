@@ -536,7 +536,7 @@ OpenSandbox 就是这个项目的**唯一安全边界**。所有 Agent 行为—
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=NDlhNmE4ZWM3MWZiYjg0Mzk5MzBkMzk3ZWFiNWJhMzBfNDA5NmFlMjEyNGI5ZDc3MWQ3YjAxYmY1ZjczMmUzZThfSUQ6NzY0MzgxNTg5ODY2Njc5ODAyMF8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
-### 四、Skills的自我进化机制（自动下载，自动创建，自动分配）
+### 四、----Skills的自我进化机制（自动下载，自动创建[按需求]，，，，自动分配，srore存储）
 
 ![Image](https://internal-api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?code=YTg4ZTdlNTE2YTU1MGY2ZTdlMzU4OTBjMzZmYjY4MjZfMDY2MmE0YzBmM2U0YmMwMjIxYzAzZWNjYjcwNmYyYzZfSUQ6NzY0MzgxNzQ4MzM3NTk3MTUwOF8xNzgwODk5NzI4OjE3ODA5ODYxMjhfVjM)
 
