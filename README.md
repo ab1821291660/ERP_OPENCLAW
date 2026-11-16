@@ -133,6 +133,14 @@ Vue :3000
            -> MySQL motorparts_db
 ```
 ```text
+frontend/ (Vue :3000)
+  -> src/api_view/ (FastAPI :8090)
+  -> src/agent/ (Orchestrator + SubAgents)
+  -> src/mcp_server/ (ERP MCP :8000/mcp)
+      -> ../motorcycle-parts-procurement-system/ (Spring Boot :8080/api)
+          -> .MySQL motorparts_db
+```
+```text
 Vue :3000 ──/api + SSE──▶ FastAPI :8090
                             │  为每个用户获取/创建独立 OpenSandbox，##===================================##===================================
                             │  再用 graph factory 轻量创建本次请求的 agent
