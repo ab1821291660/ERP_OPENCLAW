@@ -68,7 +68,7 @@ FALLBACK_MODEL = init_chat_model(
 
 
 
-
+def ________本地路径(self):pass
 # =============================================================================
 # ★ 3. 路径常量 —— 项目路径、沙箱路径、本地路径
 EXAMPLE_DIR = Path(__file__).parent.parent
@@ -84,7 +84,7 @@ DOWNLOAD_DIR = EXAMPLE_DIR / "download"##===================================
 
 
 
-
+def ________沙箱配置及路径(self):pass
 # =============================================================================
 # ★ 2. 沙箱配置 —— OpenSandbox 连接配置
 SANDBOX_CONFIG = ConnectionConfigSync(
@@ -129,7 +129,7 @@ PERSISTED_SKILLS_ROOT = "/persisted-skills" ##==================================
 
 
 
-
+def ________记忆(self):pass
 # =============================================================================
 # ★ 6. MongoDB 配置 —— 用于持久化 Agent短期记忆/checkpoint
 # ★ 7. 持久化存储 —— InMemoryStore（开发）+ MongoDBSaver（生产）

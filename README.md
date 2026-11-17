@@ -2,12 +2,21 @@
 
 
 
-【【多例--per-use沙箱与用户绑定】】 chat的stream_chat_response----调用agent_loader的get_agent_for_user获取/创建用户沙箱
 
-预热沙箱：：可n个
+| 用户沙箱生命周期管理 | `src/agent/backends/sandbox_manager.py` |
+| 稳定代理热替换 | `src/agent/backends/sandbox_proxy.py` |
+| 沙箱创建与上传skill | `src/agent/backends/sandbox_setup.py` |
+| 沙箱健康与熔断 | `src/agent/middlewares/sandbox_health.py`、`sandbox_breaker.py` |
+预热沙箱：：可n个【并发建沙箱问题】
+【多例----实为单例--】 chat的stream_chat_response----调用agent_loader的get_agent_for_user获取/创建用户沙箱##===================================##===================================
+【多例----实为单例----】每次请求基于per-user 沙箱轻量创建agent graph，实现用户级沙箱隔离。##===================================##===================================
+【动态绑定用户沙箱-稳定代理热替换底层沙箱----per-use沙箱OpenSandbox与用户隔离绑定】通过稳定`SandboxBackendProxy`热替换底层沙箱，，使已经持有代理引用的Graph、中间件和工具无需重建引用即可继续工作。
+- 实现用户级OpenSandbox生命周期管理：内存缓存、？？MongoDB 沙箱注册？？、、、可选预热、、、重启重连、健康检查、故障重建、、稳定代理热替换及连续失败熔断。
 
-每次请求基于 per-user 沙箱轻量创建 agent graph，实现用户级沙箱隔离。##===================================##===================================
 
+
+
+## 见---- ooo1208--的README的视频来源SOURCES--github来源COMPARISON对比.md
 码士 Harness 多智能体采购课程 --官网马：https://www.mashibing.com/course/2959 ----
 Langfuse 智能体评估课程
 公开 Harness 课程视频：：https://www.bilibili.com/video/BV1Cs7h6MEsX/?vd_source=56544f773befbd3fb9a51b0e1c98614c&spm_id_from=333.788.player.switch&p=7  
