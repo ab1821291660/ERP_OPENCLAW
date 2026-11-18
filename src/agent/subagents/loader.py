@@ -30,7 +30,7 @@ CONFIGS_DIR = Path(__file__).parent / "configs"
 
 
 # =============================================================================
-# ★ 4. 内部函数：_validate_subagent_config
+# ★ 4. 内部函数：
 # =============================================================================
 def _validate_subagent_config(data: Dict, filename: str) -> List[str]:
     """
@@ -51,18 +51,19 @@ def _validate_subagent_config(data: Dict, filename: str) -> List[str]:
     required = ["name", "description", "system_prompt", "tools"]
     missing = [f for f in required if f not in data or data[f] is None]
 
+
     # tools 必须是非空列表
     if "tools" in data:
         tools = data["tools"]
         if not isinstance(tools, list) or len(tools) == 0:
             missing.append("tools (必须为非空列表)")
 
+
     # system_prompt 不能为空字符串
     if "system_prompt" in data:
         sp = data["system_prompt"]
         if not isinstance(sp, str) or not sp.strip():
             missing.append("system_prompt (必须为非空字符串)")
-
     return missing
 
 # =============================================================================
@@ -90,13 +91,10 @@ def load_subagent_configs(configs_dir: Optional[Path] = None, ) -> list[dict]:
     """
     if configs_dir is None:
         configs_dir = CONFIGS_DIR
-
     configs: list[dict] = []
-
     if not configs_dir.exists():
         print(f"[WARNING] 子 Agent 配置目录不存在: {configs_dir}")
         return configs
-
     for yaml_file in sorted(configs_dir.glob("*.yaml")):
         try:
             with open(yaml_file, "r", encoding="utf-8") as f:
@@ -108,20 +106,20 @@ def load_subagent_configs(configs_dir: Optional[Path] = None, ) -> list[dict]:
             print(f"[ERROR] 读取文件失败: {yaml_file} — {e}")
             continue
 
+
         # 校验必填字段
-        missing = _validate_subagent_config(data, yaml_file.name)
+        missing = _validate_subagent_config(data, yaml_file.name)##===================================
         if missing:
             print(f"[ERROR] {yaml_file.name} 缺少必填字段: {', '.join(missing)}")
             continue
-
         configs.append(data)
         print(f"[INFO] 已加载子 Agent 配置: {data['name']} ← {yaml_file.name}")
-
     return configs
 
 
 
 
+def ________(self):pass
 # =============================================================================
 # ★ 3. 公开 API：resolve_subagent_tools
 # =============================================================================
@@ -230,7 +228,7 @@ def resolve_subagent_tools(
             subagent["middleware"] = agent_middleware
 
 
-        subagents.append(subagent) ##===================================
+        subagents.append(subagent) ##===================================##===================================##===================================
         print(
             f"[INFO] 子 Agent '{config['name']}' 已解析: "
             f"{len(unique_tools)} 个工具, "

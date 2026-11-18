@@ -102,14 +102,16 @@ async def pre_warm() -> None:
         _warm_reserve = None
 
 
+
+def ________agent_loader中调用ensure_sandbox_for_user(self):pass
 async def ensure_sandbox_for_user(user_id: str) -> SandboxBackendProxy:
     """
     获取或创建某个用户的沙箱。
 
     状态机流程（按优先级顺序）:
     0. 预热沙箱可用 → 直接认领分配给用户（零等待）
-    1. 内存缓存命中 → ping 健康检查 → 可达则直接返回，失败则重建
-    2. MongoDB 有记录 → 尝试重连已有沙箱 → 失败则重建
+    1. 内存缓存命中 → ping 健康检查 ---→ 可达则直接返回，--→ 失败则重建
+    2. MongoDB 有记录 ---→ 尝试重连已有沙箱 --→ 失败则重建
     3. 无任何记录 → 创建新沙箱
 
     为什么分 3 层缓存?
@@ -125,7 +127,7 @@ async def ensure_sandbox_for_user(user_id: str) -> SandboxBackendProxy:
     """
 
     # 状态1. 内存缓存命中
-    proxy = SANDBOX_BACKENDS.get(user_id)
+    proxy = SANDBOX_BACKENDS.get(user_id)##===================================
     if proxy is not None:
         try:
             await asyncio.to_thread(proxy.execute, "echo ok")
@@ -134,7 +136,7 @@ async def ensure_sandbox_for_user(user_id: str) -> SandboxBackendProxy:
         except Exception:
             logger.warning("用户 %s 的沙箱 %s 不可达，重建中...", user_id, proxy.id)
             #  重建沙箱
-            return await _recreate_sandbox(user_id, proxy)
+            return await _recreate_sandbox(user_id, proxy)##===================================
 
     # 状态0. 认领预热沙箱
     async with _warm_lock:
@@ -357,12 +359,12 @@ async def _recreate_sandbox(
 
     logger.info("为用户 %s 重建沙箱...", user_id)
 
-    sandbox_backend = await asyncio.to_thread(setup_sandbox, SANDBOX_CONFIG)
+    sandbox_backend = await asyncio.to_thread(setup_sandbox, SANDBOX_CONFIG)##===================================
     sandbox_id = sandbox_backend.id
 
     if existing_proxy is not None:
         # 热替换；保持 proxy 对象不变，仅替换内部 backend
-        existing_proxy.replace_backend(sandbox_backend)
+        existing_proxy.replace_backend(sandbox_backend)##===================================
     else:
         existing_proxy = SandboxBackendProxy(sandbox_backend)
         SANDBOX_BACKENDS[user_id] = existing_proxy
