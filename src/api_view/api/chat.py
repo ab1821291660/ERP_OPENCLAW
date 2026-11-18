@@ -60,7 +60,7 @@ def write_debug_log(filepath: str, event_type: str, data: dict, raw_token: objec
         pass  # 调试日志失败不影响主流程
 
 
-def ______主代理调task__子tools():
+def ______主代理调task__子tools____提取子agent名字extract_subagent_name():
     pass
 def extract_subagent_name(namespace: tuple) -> str:
     """
@@ -245,8 +245,6 @@ async def stream_chat_response(
     context = {"user_id": user_id, "username": user_id}
 
 
-
-
     # # ★ 2.4 配置与会话
     # # 创建 LangGraph 配置字典
     # def create_config(
@@ -271,15 +269,6 @@ async def stream_chat_response(
     #             "user_id": user_id,##===================================
     #             **kwargs
     #         }
-    #             #### context_schema=ProcurementContext,##from agent.scheam import ProcurementContext
-    #             # #class ProcurementContext:
-    #             # # """
-    #             # # 运行时上下文，由调用方在 invoke 时传入。
-    #             # # 用于传递当前用户身份等基础信息。
-    #             # # """
-    #             # # user_id: str                # 必填，用户唯一标识
-    #             # # username: str               # 必填，用户姓名/登录名
-    #     }
     config = agent_loader.create_config(thread_id, user_id=user_id)##对应configurable##===================================
 
 
@@ -340,8 +329,8 @@ async def stream_chat_response(
         # stream_mode=["messages", "values"] — messages 流显示 + values流检测中断##===================================##===================================
         async for chunk in agent_graph.astream(
             input=current_input,
-            config=config,##对应configurable##===================================
-            context=context,##===================================
+            config=config,##对应configurable  "thread_id": thread_id or str(uuid.uuid4()),##========"user_id": user_id,##===================================##===================================
+            context=context,## context = {"user_id": user_id, "username": user_id}##===================================
             stream_mode=["messages", "values"],##===================================##===================================
             subgraphs=True, # 启用子代理流式输出##===================================##===================================
             version="v2",

@@ -221,7 +221,7 @@ class AgentLoader:
 
 
     # =====================================================================
-    def ________查短期checkpoint_MongoDBSaver__状态__消息列表(self):
+    def ________查短期状态checkpoint_MongoDBSaver__状态包含了消息列表(self):
         pass
     # ★ 2.5 状态与消息查询
     # 获取历史状态快照列表
@@ -263,7 +263,8 @@ class AgentLoader:
             states.append(snapshot)
         return states
 
-    def ________查短期checkpoint_MongoDBSaver__消息列表(self):
+
+    def ________查短期消息列表checkpoint_MongoDBSaver__消息列表(self):
         pass
     # 获取当前消息列表（从 checkpoint）
     async def get_current_messages(self, thread_id: str) -> List[Dict[str, Any]]:
@@ -342,7 +343,7 @@ class AgentLoader:
             print(f"[AgentLoader] 获取会话时间失败: {e}")
             return datetime.now()
 
-    def ________删短期checkpoint_MongoDBSaver(self):
+    def UI____删短期checkpoint_MongoDBSaver____删session_display_messages展示信息(self):
         pass
     # 删除会话（checkpoint + 展示消息）
     async def delete_session(self, thread_id: str) -> bool:
@@ -365,6 +366,8 @@ class AgentLoader:
             result = collection.delete_many({"thread_id": thread_id})##===================================
             ##
             ##
+            ##
+            ##
             display_collection = db["session_display_messages"]
             display_result = display_collection.delete_many({"thread_id": thread_id})##===================================
             print(
@@ -377,7 +380,7 @@ class AgentLoader:
             return False
 
     # =====================================================================
-    def ________查find短期display_messages(self):
+    def UI____增insert_many先删delete_many____display_messages展示信息(self):
         pass
     # ★ 2.7 完整展示消息存取
     # 消息字段最大长度限制，超过此长度的文本将被截断
@@ -397,7 +400,6 @@ class AgentLoader:
             if field in msg and isinstance(msg[field], str) and len(msg[field]) > cls._MAX_FIELD_LENGTH:
                 msg[field] = msg[field][:cls._MAX_FIELD_LENGTH] + "\n\n...(内容过长已截断)"
         return msg
-
     # 保存展示消息到 MongoDB
     async def save_display_messages(self, thread_id: str, messages: List[Dict[str, Any]]) -> bool:
         """
@@ -429,7 +431,7 @@ class AgentLoader:
                 docs = []
                 for i, msg in enumerate(messages):
                     # 截断过长字段（避免传入 i 参数，方法只接受 msg）
-                    msg = self._truncate_message_fields(msg)##===================================
+                    msg = self._truncate_message_fields(msg)##===================================##===================================
                     docs.append({
                         "thread_id": thread_id,
                         "index": i,
@@ -445,7 +447,8 @@ class AgentLoader:
             traceback.print_exc()
             return False
 
-
+    def UI____查display_messages展示信息(self):
+        pass
     # 从 MongoDB 读取展示消息
     async def get_display_messages(self, thread_id: str) -> Optional[List[Dict[str, Any]]]:
         """

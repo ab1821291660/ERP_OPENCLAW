@@ -56,7 +56,7 @@
 - 从黑盒执行变成可观察流式过程：前端展示 token、工具开始、工具参数、工具结果、子 Agent 来源和中断状态。
 - ----从会话临时状态变成可恢复状态：LangGraph checkpoint + MongoDB 支持同一 `thread_id` 下恢复中断。
 - ----从提示词堆叠变成 Skill 管理：采购分析流程、抓取脚本、URL 映射、图表参数都沉淀为 `SKILL.md + scripts + data`。
-
+      | 预置同步、动态下载、测试、分配、持久化、恢复 |
 
 
 
@@ -265,9 +265,7 @@ MCP 解决的是“Agent 怎么安全、统一地访问外部业务系统”。�
 
 ---
 ### 1. 项目总体定位
-
 `ERP_OPENCLAW` 是一个围绕“摩托车零部件采购 ERP”的多 Agent 智能助手项目。它不是单纯的聊天机器人，而是把多个系统组合成一个业务型 Agent 应用：
-
 - Python Agent 后端：基于 LangGraph、DeepAgents、LangChain、FastAPI。
 - 多 Agent 编排：主 Agent 负责协调，采购分析 Agent 和订单 Agent 负责具体任务。
 - MCP 工具层：把 Java ERP 后端 API 和远程可视化服务包装成 Agent 可调用工具。
@@ -276,9 +274,7 @@ MCP 解决的是“Agent 怎么安全、统一地访问外部业务系统”。�
 - 状态持久化：LangGraph checkpoint 用 MongoDB，用户偏好和技能用 StoreBackend 路由。
 - 前端：Vue 3 + Vite，通过 SSE 展示流式 token、工具调用、人工中断。
 - 业务后端：Java Spring Boot + MyBatis Plus + MySQL 的 ERP 示例系统。
-
 可以把它理解为：
-
 ```text
 用户
   -> Vue 前端
@@ -411,11 +407,8 @@ create_deep_agent(
 ---
 
 ### 5. RAG 是怎么搭建的
-
 #### 5.1 先说结论：不是传统向量库 RAG
-
 源码中没有发现典型传统 RAG 组件：
-
 - 没有 embedding 模型调用。
 - 没有 FAISS、Chroma、Milvus、pgvector 等向量库。
 - 没有 document splitter、retriever、reranker 链路。
@@ -434,10 +427,8 @@ create_deep_agent(
 | 长期记忆 | `/memories/{user_id}/preferences.md` | 用户偏好、最近供应商、最近查询 |
 | 沙箱文件 | `/analysis/report_*.md`, `/analysis/temp/*.md` | 分析报告、抓取页面、临时数据 |
 
-#### 5.2 Agentic RAG 流程
-
+#### 5.2 Agentic RAG 流程 ##===================================
 以“帮我分析某零件供应商价格”为例：
-
 ```text
 用户问题
   -> 主 Agent 读取 /memories/{user_id}/preferences.md
@@ -447,12 +438,11 @@ create_deep_agent(
   -> 调用 MCP 工具查 ERP 内部数据
   -> 读取 supplier-price-urls/data/url_mapping.yaml
   -> 命中 URL 后执行 web-scraper 抓取外部页面
-  -> 运行 Python 分析脚本
+  -> 运行 Python 分析脚本【沙箱内】 ##===================================
   -> 调用 generate_visualization 生成图表
   -> 写 /analysis/report_xxx.md
   -> 返回报告路径、摘要、结论、建议
 ```
-
 这类设计的核心思想是：让 Agent 自己按任务需要读取权威说明和调用工具，而不是提前把所有文档塞进向量库。
 
 #### 5.3 优点与限制
@@ -473,21 +463,59 @@ create_deep_agent(
 
 ---
 
-### 6. 智能体怎么通信
+### 10. 【子agent流程】业务流程拆解
+#### 10.1 采购分析流程
+```text
+用户提出分析需求
+  -> 主 Agent 判断为分析类任务
+  -> 委派 procurement-analyst
+  -> 子 Agent 扫描 /skills/procurement/
+  -> 读取 procurement-analysis/SKILL.md
+  -> 调 ERP MCP 查内部数据
+  -> 读取 supplier-price-urls 映射
+  -> web-scraper 抓外部报价
+  -> Python 脚本分析 【沙箱内】 ##===================================
+  -> generate_visualization 生成图表
+  -> 写 /analysis/report_xxx.md
+  -> 返回摘要和建议 【摘要】 ##===================================
+```
+适合学习点：
+- 如何用 Skill 固化分析流程。
+- 如何组合 ERP 结构化数据和外部网页数据。
+- 如何把多图表 MCP 工具压缩成统一工具。
+- 如何让子 Agent 产出文件而不是把大 JSON 塞回对话。
 
+
+#### 10.2 采购订单流程
+```text
+用户提出创建/修改订单
+  -> 主 Agent 委派 procurement-order
+  -> 子 Agent 提取订单字段
+  -> Schema 校验
+  -> 缺字段则 request_order_info 中断 【中断-补充数据】 ##===================================
+  -> 用户补充后 resume
+  -> 调用 order_create/order_update 前 HITL 审批  【中断-接受or拒绝】 ##===================================
+  -> 用户 approve/reject
+  -> approve 后 MCP 调 Java ERP API
+  -> 返回操作结果
+```
+适合学习点：
+- 如何在 Agent 中做关键操作审批。  ##===================================
+- 如何用自然语言补全结构化字段。  ##===================================
+- 如何把危险业务操作限制在专门子 Agent 内。
+
+
+### 6. 【SSE+工具面板+审批面板】智能体怎么通信
 项目里有三层通信。
-
-#### 6.1 前端与后端通信：SSE
-
+#### 6.1 【】前端与后端通信：SSE
 前端 `frontend/src/api/chat.js` 用 `fetch + ReadableStream` 调用：
-
 ```text
 POST /api/chat/stream
 POST /api/chat/{thread_id}/resume
 ```
 
-后端 `src/api_view/api/chat.py` 使用 `StreamingResponse` 持续推送 SSE：
 
+后端 `src/api_view/api/chat.py` 使用 `StreamingResponse` 持续推送 SSE：
 ```text
 token         AI 文本片段
 tool_start    工具开始调用
@@ -499,12 +527,12 @@ done          本轮结束
 error         错误
 ```
 
+
 前端把这些事件转换成消息列表、工具面板和中断横幅。
 
-#### 6.2 前端、后端、Agent 的端到端通信链路
 
+#### 6.2 【】前端、后端、Agent 的端到端通信链路
 一次普通对话从前端输入框到 Agent 再回到 UI，大致分 8 步：
-
 ```text
 1. App.vue 用户点击发送
    -> handleSend(message)
@@ -552,38 +580,34 @@ error         错误
 ```
 
 这里有几个关键设计点：
-
 | 设计点 | 代码位置 | 作用 |
 | --- | --- | --- |
 | `thread_id` | `frontend/src/App.vue`, `src/api_view/api/chat.py`, `AgentLoader.create_config()` | 同一个会话的 LangGraph checkpoint key |
 | `context` | `stream_chat_response()` | 给 Agent 注入 `user_id`、`username`，后续由 `ContextInjectionMiddleware` 写入 system message |
 | `stream_mode=["messages","values"]` | `agent_loader.agent.astream(...)` | `messages` 用于展示 token/工具，`values` 用于检测 interrupt |
 | `subgraphs=True` | `agent_loader.agent.astream(...)` | 让子 Agent 的流式输出也能被后端捕获 |
-| `source` | `extract_subagent_name(namespace)` | 标记消息来自 `main` 还是某个子 Agent |
-| `display_messages` | `stream_chat_response()` + `AgentLoader.save_display_messages()` | 保存 UI 友好的消息顺序，包含工具和子 Agent 消息 |
+| `source` | `extract_subagent_name(namespace)` | 标记消息来自 `main` 还是某个子 Agent | ##===================================##===================================
+| `display_messages` | `stream_chat_response()` + `AgentLoader.save_display_messages()` | 保存 UI 友好的消息顺序，包含工具和子 Agent 消息 | ##===================================##===================================
 
-后端并不是把 Agent 的原始状态直接丢给前端，而是在 `chat.py` 里做了一层“流事件适配”：
-
+后端并不是把Agent的原始状态直接丢给前端，而是在 `chat.py` 里做了一层“流事件适配”：##===================================##===================================
 ```text
 LangGraph chunk
   -> 后端解析 token / metadata / namespace
   -> 转成统一 SSE JSON
   -> 前端按 type 更新 UI
 ```
+这个适配层非常重要。##===================================##===================================
+LangGraph 的 checkpoint 更适合恢复执行，
+前端展示则需要“用户消息、助手文本、工具调用、工具结果”按时间顺序混排，所以项目额外维护了 `session_display_messages` 集合来保存展示消息。
 
-这个适配层非常重要。LangGraph 的 checkpoint 更适合恢复执行，前端展示则需要“用户消息、助手文本、工具调用、工具结果”按时间顺序混排，所以项目额外维护了 `session_display_messages` 集合来保存展示消息。
 
-#### 6.3 中断恢复通信：前端如何把人工输入送回 Agent
-
+#### 6.3 【】中断恢复通信：前端如何把人工输入送回 Agent
 订单流程里有两种中断：
-
 ```text
 order_info_supplement  缺字段，需要用户补充自然语言信息
 hitl_approval          创建/修改订单前，需要用户 approve/reject
 ```
-
 后端检测到中断时，会发送：
-
 ```json
 {
   "type": "interrupt",
@@ -593,9 +617,7 @@ hitl_approval          创建/修改订单前，需要用户 approve/reject
   "thread_id": "..."
 }
 ```
-
 或：
-
 ```json
 {
   "type": "interrupt",
@@ -606,60 +628,65 @@ hitl_approval          创建/修改订单前，需要用户 approve/reject
 }
 ```
 
-前端 `InterruptBanner.vue` 根据 `interrupt_type` 展示不同 UI：
 
+
+前端 `InterruptBanner.vue` 根据 `interrupt_type` 展示不同 UI：
 - `order_info_supplement` ：展示缺失字段和文本框，提交 `{ supplement: "..." }` 。
 - `hitl_approval` ：展示待执行订单操作，提交 `{ decisions: [{ type: "approve" }] }` 或 reject。
 
-恢复时链路如下：
 
+
+恢复时链路如下：
 ```text
 InterruptBanner.vue
   -> emit("resume", resumeData)
   -> App.vue handleResume(resumeData)
   -> frontend/src/api/chat.js resumeChat(threadId, resumeData)
-  -> POST /api/chat/{thread_id}/resume
-  -> chat.py chat_resume()
+  -> POST /api/chat/{thread_id}/resume ##===================================
+  -> chat.py chat_resume() ##===================================
   -> stream_chat_response(thread_id=..., resume_data=...)
   -> current_input = Command(resume=resume_data)
   -> agent_loader.agent.astream(...) 继续原 checkpoint
 ```
-
 这里 `thread_id` 很关键：恢复不是新开一轮普通对话，而是在同一个 checkpoint 上用 `Command(resume=...)` 继续执行被暂停的 LangGraph。
 
-#### 6.4 后端和 Agent 的生命周期通信
 
+
+
+
+
+#### 6.4  AgentLoader----后端和Agent的生命周期通信
 FastAPI 后端启动时通过 lifespan 初始化 Agent：
-
 ```text
 web_main.py lifespan
-  -> agent_loader.initialize()
+  -> agent_loader.initialize() ##===================================
   -> MongoClient(MONGODB_URI)
   -> get_agent_async()
   -> create_main_agent()
 ```
 
-`AgentLoader` 是后端与 Agent 之间的门面：
 
+`AgentLoader` 是后端与 Agent 之间的门面：
 | 方法 | 作用 |
 | --- | --- |
-| `initialize()` | 初始化 MongoDB 连接并懒加载 Agent |
+| `initialize()` | 初始化 MongoDB 连接并懒加载 Agent | ##===================================
 | `create_config(thread_id, user_id)` | 构造 LangGraph configurable，用于 checkpoint |
+
 | `get_current_messages(thread_id)` | 从 Agent checkpoint 获取当前消息 |
 | `get_state_history(thread_id)` | 获取 LangGraph 状态历史 |
+
+
 | `save_display_messages(thread_id, messages)` | 保存前端展示消息 |
 | `get_display_messages(thread_id)` | 读取前端展示消息 |
 | `delete_session(thread_id)` | 删除 checkpoint 和展示消息 |
-
 也就是说，后端和 Agent 的通信有两条线：
-
 ```text
 执行线：FastAPI -> AgentLoader.agent.astream() -> LangGraph/DeepAgents
 状态线：FastAPI -> AgentLoader -> MongoDB checkpoint/display_messages
 ```
 
-#### 6.5 通信数据结构速记
 
+#### 6.5 api----通信数据结构速记
 | 方向 | 数据结构 | 示例 |
 | --- | --- | --- |
 | 前端到后端普通对话 | `{ message, thread_id }` | `POST /api/chat/stream` |
@@ -667,33 +694,30 @@ web_main.py lifespan
 | 后端到 Agent 普通输入 | `{"messages": [{"role": "user", "content": message}]}` | `current_input` |
 | 后端到 Agent 恢复输入 | `Command(resume=resume_data)` | HITL 继续执行 |
 | 后端到前端文本 | SSE `{type:"token", content, source}` | 流式文字 |
-| 后端到前端工具 | SSE `{type:"tool_start/tool_args/tool_result/tool_end", ...}` | 工具面板 |
-| 后端到前端中断 | SSE `{type:"interrupt", interrupt_type, ...}` | 人工介入 UI |
+| 后端到前端工具 | SSE `{type:"tool_start/tool_args/tool_result/tool_end", ...}` | 工具面板 UI |  ##===================================##===================================  
+| 后端到前端中断 | SSE `{type:"interrupt", interrupt_type, ...}` | 人工介入面板UI |  ##===================================##=================================== 
 | 后端到前端完成 | SSE `{type:"done", thread_id, content, interrupted}` | 一轮结束 |
 
+
 #### 6.6 主 Agent 与子 Agent 通信：DeepAgents task 工具
-
 主 Agent 的 `system_prompt` 明确要求：
-
 - 分析类任务委派 `procurement-analyst` 。
 - 订单类任务委派 `procurement-order` 。
 - 主 Agent 自己只处理问候、功能询问、通用搜索和技能管理。
+委派通过 DeepAgents 内置的 `task` 工具完成。主 Agent 把任务目标、用户偏好、原始需求写入 `description`，子Agent根据自己的YAML `system_prompt` 和工具列表执行。
 
-委派通过 DeepAgents 内置的 `task` 工具完成。主 Agent 把任务目标、用户偏好、原始需求写入 `description`，子 Agent 根据自己的 YAML `system_prompt` 和工具列表执行。
 
 子 Agent 配置在：
-
 ```text
 src/agent/subagents/configs/procurement_analyst.yaml
 src/agent/subagents/configs/procurement_order.yaml
 ```
-
 加载器 `src/agent/subagents/loader.py` 会把 YAML 中的工具名模式匹配为真实工具对象。
 
+
+
 #### 6.7 Agent 与外部系统通信：MCP 和工具调用
-
 Agent 不直接访问 Java API，而是走 MCP：
-
 ```text
 Agent
   -> MultiServerMCPClient
@@ -702,16 +726,19 @@ Agent
   -> Java ERP REST API
 ```
 
+
 另外还连接远程魔塔 MCP：
 
 ```text
 Agent -> ModelScope MCP -> generate_* 可视化工具
 ```
-
 这让业务 API、可视化能力都变成 LangChain `StructuredTool`，统一纳入 Agent 的工具调用系统。
 
----
 
+
+
+
+---
 ### 7. ----MCP 在里面的应用
 
 #### 7.1 MCP Server 端
@@ -1031,101 +1058,45 @@ Command(resume=resume_data)
 
 ---
 
-### 10. 业务流程拆解
 
-#### 10.1 采购分析流程
-
-```text
-用户提出分析需求
-  -> 主 Agent 判断为分析类任务
-  -> 委派 procurement-analyst
-  -> 子 Agent 扫描 /skills/procurement/
-  -> 读取 procurement-analysis/SKILL.md
-  -> 调 ERP MCP 查内部数据
-  -> 读取 supplier-price-urls 映射
-  -> web-scraper 抓外部报价
-  -> Python 脚本分析
-  -> generate_visualization 生成图表
-  -> 写 /analysis/report_xxx.md
-  -> 返回摘要和建议
-```
-
-适合学习点：
-
-- 如何用 Skill 固化分析流程。
-- 如何组合 ERP 结构化数据和外部网页数据。
-- 如何把多图表 MCP 工具压缩成统一工具。
-- 如何让子 Agent 产出文件而不是把大 JSON 塞回对话。
-
-#### 10.2 采购订单流程
-
-```text
-用户提出创建/修改订单
-  -> 主 Agent 委派 procurement-order
-  -> 子 Agent 提取订单字段
-  -> Schema 校验
-  -> 缺字段则 request_order_info 中断
-  -> 用户补充后 resume
-  -> 调用 order_create/order_update 前 HITL 审批
-  -> 用户 approve/reject
-  -> approve 后 MCP 调 Java ERP API
-  -> 返回操作结果
-```
-
-适合学习点：
-
-- 如何在 Agent 中做关键操作审批。
-- 如何用自然语言补全结构化字段。
-- 如何把危险业务操作限制在专门子 Agent 内。
 
 ---
-
-### 11. 复杂点与亮点统计
-
+### 11. ========复杂点与亮点统计
 #### 11.1 架构复杂点
 
-| 编号 | 复杂点 | 说明 |
-| --- | --- | --- |
-| 1 | 多系统组合 | Python Agent、Vue 前端、MCP Server、Java ERP、MongoDB、OpenSandbox 同时工作 |
-| 2 | 多 Agent 委派 | 主 Agent 只做协调，子 Agent 根据 YAML 动态加载工具和技能 |
-| 3 | MCP 双来源 | 同时接本地 ERP MCP 和远程可视化 MCP |
-| 4 | 状态分层 | checkpoint、展示消息、用户记忆、技能持久化、沙箱文件分别管理 |
-| 5 | HITL 恢复 | 需要前端、FastAPI、LangGraph checkpoint、Command resume 协同 |
-| 6 | 沙箱与 Store 路由 | `CompositeBackend` 把 `/memories/`、`/persisted-skills/` 和普通文件分流 |
-| 7 | Skill 生命周期 | 预置同步、动态下载、测试、分配、持久化、恢复 |
-| 8 | 工具结果展示 | SSE 中要区分 token、tool call、tool result、子 Agent source |
-| 9 | 长上下文控制 | DeepAgents offloading + summarization + 主动 compact |
-| 10 | 业务安全 | 订单创建/更新必须数据补齐和人工审批 |
+| 编号 | 复杂点            | 说明 |
+| --- |----------------| --- |
+| 1 | 多系统组合          | Python Agent、Vue 前端、MCP Server、Java ERP、MongoDB、OpenSandbox 同时工作 |
+| 2 | 多 Agent 委派     | 主 Agent 只做协调，子 Agent 根据 YAML 动态加载工具和技能 |
+| 3 | ----MCP 双来源    | 同时接本地 ERP MCP 和远程可视化 MCP |
+| 4 | ----状态分层       | checkpoint、展示消息、用户记忆、技能持久化、沙箱文件分别管理 |
+| 5 | HITL 恢复        | 需要前端、FastAPI、LangGraph checkpoint、Command resume 协同 |
+| 6 | 沙箱与 Store 路由   | `CompositeBackend` 把 `/memories/`、`/persisted-skills/` 和普通文件分流 |
+| 7 | ----Skill 生命周期 | 预置同步、动态下载、测试、分配、持久化、恢复 |
+| 8 | SSE工具结果展示      | SSE 中要区分 token、tool call、tool result、子 Agent source |
+| 9 | 长上下文控制         | DeepAgents offloading + summarization + 主动 compact |
+| 10 | 业务安全           | 订单创建/更新必须数据补齐和人工审批 |
 
 #### 11.2 工程亮点
-
 - `create_main_agent()` 的初始化分阶段很清晰，是学习 Agent 工程启动链路的好入口。
 - 子 Agent 用 YAML 配置，提示词、工具、技能路径、HITL 配置都可外置。
-- MCP 工具按前缀分组，能把不同能力分配给不同子 Agent。
-- `generate_visualization` 把 26 个图表工具合并成一个统一入口，显著降低工具选择复杂度。
+- ----MCP 工具按前缀分组，能把不同能力分配给不同子 Agent。
+- ----`generate_visualization` 把 26 个图表工具合并成一个统一入口，显著降低工具选择复杂度。
 - `CompositeBackend` 路由设计很漂亮：沙箱负责临时执行，StoreBackend 负责记忆和技能持久化。
-- `MemoryUpdateMiddleware` 自动维护最近供应商和查询摘要，减少对 Agent 自觉性的依赖。
-- `session_display_messages` 单独保存 UI 消息，避免直接依赖 checkpoint 展示。
-- 订单流程实现了两类人工介入：信息补充和最终审批，适合真实业务系统。
-- Skill 采用 `SKILL.md + 脚本 + 数据` ，让 Agent 能力可文档化、可迁移、可扩展。
+- ----`MemoryUpdateMiddleware` 自动维护最近供应商和查询摘要，减少对 Agent 自觉性的依赖。
+- 【】`session_display_messages` 单独保存 UI 消息，，，，避免直接依赖 checkpoint 展示。
+- 【】订单流程实现了两类人工介入：信息补充和最终审批，适合真实业务系统。
+- ----Skill 采用 `SKILL.md + 脚本 + 数据` ，让 Agent 能力可文档化、可迁移、可扩展。
 
 #### 11.3 当前风险与可改进点
-
-- `src/mcp_server/tools/suppliers_tools.py` 中 `supplier_query` 使用了未定义的 `request_params` ，运行时大概率会报错，应改为 `{"name": name}` 。
-- `src/agent/config.py` 和 `src/api_view/web_config.py` 中包含硬编码 MongoDB、OpenSandbox、模型服务地址和密码，生产环境应改为环境变量。
 - `STORE = InMemoryStore()` 会导致用户记忆和技能持久化只在进程内有效；若要跨进程/重启持久化，应换成 Redis/Mongo/Postgres 等持久 Store。
-- `README.md` 仍是 LangGraph 模板说明，未描述真实项目。
-- Java README 与 POM 版本不一致，容易误导部署。
-- `requirements.txt` 中有 `-e e:\my_project\project30` 这种本机路径，迁移环境可能失败。
 - 测试文件偏手动验证，缺少自动化集成测试覆盖 MCP 工具、Agent 委派、HITL resume。
-- MCP 工具错误返回多为字符串，不够结构化，Agent 解析时容易不稳定。
+- MCP 工具错误返回多为字符串，不够结构化，Agent 解析时容易不稳定。##===================================
+
 
 ---
-
 ### 12. 推荐学习路线
-
 按这个顺序读源码会比较顺：
-
 1. `langgraph.json`
 2. `start_web.py`
 3. `src/api_view/web_main.py`
@@ -1147,7 +1118,6 @@ Command(resume=resume_data)
 19. Java ERP 的 `pom.xml` 、 `application.yml` 、controller/service/mapper
 
 ---
-
 ### 13. 五个重点问题速答
 
 #### RAG 怎么搭建？
