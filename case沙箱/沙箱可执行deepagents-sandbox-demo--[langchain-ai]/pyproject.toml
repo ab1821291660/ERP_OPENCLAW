@@ -1,0 +1,25 @@
+[project]
+name = "deepagents-sandbox-demo"
+version = "0.1.0"
+description = "Deep agent with LangSmith sandbox for filesystem access"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "deepagents>=0.3.8",
+    "langsmith @ git+https://github.com/langchain-ai/langsmith-sdk@main#subdirectory=python",
+    "langgraph>=0.2.0",
+    "langgraph-checkpoint>=4.1.1",
+    "langgraph-cli[inmem]>=0.4.12",
+    "langchain-anthropic>=1.4.7",
+]
+
+[build-system]
+requires = ["setuptools>=73.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+"deepagents_sandbox" = "src/deepagents_sandbox"
+
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
